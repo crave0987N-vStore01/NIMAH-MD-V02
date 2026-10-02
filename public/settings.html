@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<!-- NIMAH MD — © 2026 Nimah Dev. All Rights Reserved. Proprietary — see LICENSE. -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+    <title>NIMAH MD — My Bot Settings</title>
+    <link rel="icon" href="https://i.ibb.co/21PLPr29/file-00000000019082118137012f9eb9753e.png">
+    <link rel="preload" as="image" href="https://i.ibb.co/21PLPr29/file-00000000019082118137012f9eb9753e.png">
+    <link rel="preload" as="image" href="/bg.jpg">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        html, body { height: 100%; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #060402; color: #f3e6cf; min-height: 100vh; overflow-x: hidden; position: relative;
+        }
+        .backdrop {
+            position: fixed; inset: 0; z-index: 0;
+            background: linear-gradient(180deg, rgba(6,4,2,0.55) 0%, rgba(6,4,2,0.85) 60%, #060402 100%), url('/bg.jpg');
+            background-size: cover; background-position: center; background-attachment: fixed;
+        }
+        .glow { position: fixed; border-radius: 50%; filter: blur(75px); z-index: 0; opacity: 0.5; pointer-events: none; }
+        .glow-a { width: 320px; height: 320px; top: -110px; left: -90px; background: radial-gradient(circle, #f2b705, transparent 70%); animation: drift1 17s ease-in-out infinite; }
+        .glow-b { width: 280px; height: 280px; bottom: -90px; right: -70px; background: radial-gradient(circle, #c98a1a, transparent 70%); animation: drift2 21s ease-in-out infinite; }
+        @keyframes drift1 { 0%,100% { transform: translate(0,0); } 50% { transform: translate(40px, 55px); } }
+        @keyframes drift2 { 0%,100% { transform: translate(0,0); } 50% { transform: translate(-30px, -45px); } }
+        @keyframes riseIn { from { opacity: 0; transform: translateY(-14px); } to { opacity: 1; transform: translateY(0); } }
+
+        .ember { position: fixed; bottom: -4vh; border-radius: 50%; background: #f2b705; pointer-events: none; z-index: 1; animation: emberRise linear infinite; box-shadow: 0 0 6px #f2b705; }
+        @keyframes emberRise {
+            0% { transform: translateY(0) translateX(0); opacity: 0; }
+            10% { opacity: 0.8; } 90% { opacity: 0.5; }
+            100% { transform: translateY(-108vh) translateX(24px); opacity: 0; }
+        }
+
+        .stage { position: relative; z-index: 2; min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 34px 18px; }
+        .logo-shot { width: 100%; max-width: 260px; margin: 0 auto 4px; animation: riseIn 0.9s ease-out both; }
+        .logo-shot img { width: 100%; display: block; filter: drop-shadow(0 10px 26px rgba(242,183,5,0.25)); }
+
+        .ascii-art { font-family: 'Courier New', monospace; font-size: 9px; line-height: 1.05; color: #f2b705; text-align: center; white-space: pre; opacity: 0.85; margin-bottom: 6px; animation: riseIn 1s ease-out both; text-shadow: 0 0 10px rgba(242,183,5,0.4); }
+
+        .title-shimmer {
+            font-size: 13px; font-weight: 800; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 24px;
+            background: linear-gradient(90deg, #c9b183, #f2b705, #ffd166, #c9b183);
+            background-size: 200% auto; -webkit-background-clip: text; background-clip: text; color: transparent;
+            animation: shimmerTitle 3s linear infinite;
+        }
+        @keyframes shimmerTitle { to { background-position: -200% center; } }
+
+        .card {
+            width: 100%; max-width: 380px;
+            background: rgba(20, 14, 4, 0.55); backdrop-filter: blur(14px);
+            border: 1px solid rgba(242,183,5,0.22); border-radius: 22px;
+            padding: 28px 24px; text-align: center;
+            box-shadow: 0 24px 60px rgba(0,0,0,0.55); animation: riseIn 0.9s ease-out 0.1s both;
+        }
+        p.hint-text { font-size: 12px; color: #d8c49a; margin-bottom: 6px; line-height: 1.5; }
+        input {
+            width: 100%; padding: 13px 14px; margin-top: 12px; border-radius: 10px;
+            border: 1px solid rgba(242,183,5,0.3); background: rgba(10,6,0,0.5); color: #fff; font-size: 14px; outline: none;
+            text-align: left;
+        }
+        input:focus { border-color: #f2b705; }
+        .btn {
+            width: 100%; margin-top: 18px;
+            background: linear-gradient(135deg, #f2b705, #b8860b); color: #1a1200; border: none;
+            padding: 13px; border-radius: 10px; font-weight: 700; font-size: 14px; cursor: pointer;
+        }
+        .btn.secondary { background: rgba(242,183,5,0.1); color: #f2b705; border: 1px solid rgba(242,183,5,0.3); margin-top: 10px; }
+        #err { color: #ff8080; font-size: 12px; margin-top: 12px; min-height: 16px; }
+        .secure-note { font-size: 10px; color: #7a6a45; margin-top: 16px; }
+
+        #panel { display: none; text-align: left; }
+        .status-line { display: flex; align-items: center; gap: 8px; font-size: 13px; margin-bottom: 18px; justify-content: center; }
+        .dot { width: 8px; height: 8px; border-radius: 50%; }
+        .dot.on { background: #ffd166; box-shadow: 0 0 8px #ffd166; }
+        .dot.off { background: #6b5a3a; }
+        label { display: block; font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.5px; color: #a68a55; margin-top: 16px; }
+        .row { display: flex; gap: 8px; align-items: center; margin-top: 10px; }
+        .toggle-chip {
+            flex: 1; text-align: center; font-size: 12px; padding: 10px; border-radius: 10px; cursor: pointer;
+            border: 1px solid rgba(242,183,5,0.3); color: #d8c49a; background: rgba(242,183,5,0.06);
+        }
+        .toggle-chip.active { background: linear-gradient(135deg,#f2b705,#b8860b); color: #1a1200; border-color: transparent; font-weight: 700; }
+        #saveMsg { font-size: 12px; margin-top: 14px; min-height: 16px; text-align: center; }
+        .foot { margin-top: 24px; font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; color: #7a6a45; text-align: center; }
+        .foot b { color: #d8b45a; }
+    </style>
+</head>
+<body>
+    <div class="backdrop"></div>
+    <div class="glow glow-a"></div>
+    <div class="glow glow-b"></div>
+    <div id="embers"></div>
+
+    <div class="stage">
+        <div class="logo-shot"><img src="https://i.ibb.co/21PLPr29/file-00000000019082118137012f9eb9753e.png" alt="NIMAH MD"></div>
+        <pre class="ascii-art">█   █ ████ 
+██ ██ █   █
+█ █ █ █   █
+█   █ █   █
+█   █ ████ </pre>
+        <div class="title-shimmer">My Bot Settings</div>
+
+        <div class="card" id="loginBox">
+            <p class="hint-text">Log in with the number and password sent to your own WhatsApp when your bot connected.</p>
+            <input type="text" id="phoneInput" placeholder="Your WhatsApp number">
+            <input type="password" id="pwInput" placeholder="Password from your WhatsApp">
+            <button class="btn" onclick="doLogin()">Log In</button>
+            <div id="err"></div>
+            <div class="secure-note">🔒 This only ever shows your own bot's settings</div>
+        </div>
+
+        <div class="card" id="panel">
+            <div class="status-line"><span class="dot" id="statusDot"></span><span id="statusText"></span></div>
+
+            <label>Bot Label</label>
+            <input type="text" id="labelInput" placeholder="Give your bot a name">
+            <button class="btn secondary" onclick="saveLabel()">Save Label</button>
+
+            <label>Auto Status</label>
+            <div class="row">
+                <div class="toggle-chip" id="viewChip" onclick="toggleField('view')">👁️ View</div>
+                <div class="toggle-chip" id="reactChip" onclick="toggleField('react')">💚 React</div>
+            </div>
+
+            <div id="saveMsg"></div>
+            <button class="btn secondary" onclick="logout()" style="margin-top:22px;">Log Out</button>
+        </div>
+
+        <div class="foot">Powered By <b>Nimah Dev</b></div>
+    </div>
+
+    <script>
+        let creds = JSON.parse(localStorage.getItem('nimah_user_creds') || 'null');
+        let me = null;
+
+        function authFetch(url, opts) {
+            opts = opts || {};
+            opts.headers = Object.assign({
+                'x-user-phone': creds.phone, 'x-user-password': creds.password, 'Content-Type': 'application/json'
+            }, opts.headers || {});
+            return fetch(url, opts);
+        }
+
+        async function doLogin() {
+            const phone = document.getElementById('phoneInput').value.trim();
+            const password = document.getElementById('pwInput').value.trim();
+            const err = document.getElementById('err');
+            err.innerText = '';
+            if (location.protocol !== 'http:' && location.protocol !== 'https:') {
+                err.innerText = 'Open this page from its real web link (not a downloaded file) for it to work.';
+                return;
+            }
+            try {
+                const res = await fetch('/api/user/login', {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ phone, password })
+                });
+                const data = await res.json();
+                if (!res.ok) { err.innerText = data.error || 'Login failed.'; return; }
+                creds = { phone, password };
+                localStorage.setItem('nimah_user_creds', JSON.stringify(creds));
+                showPanel();
+            } catch (e) { err.innerText = 'Server connection error.'; }
+        }
+
+        async function loadMe() {
+            const res = await authFetch('/api/user/me');
+            if (res.status === 401) return logout();
+            me = await res.json();
+            document.getElementById('statusDot').className = 'dot ' + (me.connected ? 'on' : 'off');
+            document.getElementById('statusText').innerText = me.connected ? 'Bot connected' : 'Bot offline';
+            document.getElementById('labelInput').value = me.label || '';
+            document.getElementById('viewChip').className = 'toggle-chip' + (me.autoStatus.view ? ' active' : '');
+            document.getElementById('reactChip').className = 'toggle-chip' + (me.autoStatus.react ? ' active' : '');
+        }
+
+        function showPanel() {
+            document.getElementById('loginBox').style.display = 'none';
+            document.getElementById('panel').style.display = 'block';
+            loadMe();
+            setInterval(loadMe, 10000);
+        }
+
+        async function saveLabel() {
+            const label = document.getElementById('labelInput').value;
+            const msg = document.getElementById('saveMsg');
+            await authFetch('/api/user/label', { method: 'POST', body: JSON.stringify({ label }) });
+            msg.style.color = '#4ade80';
+            msg.innerText = 'Saved!';
+            setTimeout(() => { msg.innerText = ''; }, 2000);
+        }
+
+        async function toggleField(field) {
+            const newVal = !me.autoStatus[field];
+            await authFetch('/api/user/autostatus', { method: 'POST', body: JSON.stringify({ [field]: newVal }) });
+            loadMe();
+        }
+
+        function logout() {
+            localStorage.removeItem('nimah_user_creds');
+            location.reload();
+        }
+
+        if (creds) showPanel();
+
+        // ---- Drifting embers (plain CSS dots — no icon assets) ----
+        function spawnEmbers() {
+            const wrap = document.getElementById('embers');
+            const count = window.innerWidth < 500 ? 12 : 20;
+            for (let i = 0; i < count; i++) {
+                const e = document.createElement('span');
+                e.className = 'ember';
+                const size = 2 + Math.random() * 3;
+                e.style.width = size + 'px';
+                e.style.height = size + 'px';
+                e.style.left = Math.random() * 100 + 'vw';
+                const duration = 9 + Math.random() * 10;
+                e.style.animationDuration = duration + 's';
+                e.style.animationDelay = (-Math.random() * duration) + 's';
+                wrap.appendChild(e);
+            }
+        }
+        spawnEmbers();
+    </script>
+</body>
+</html>
