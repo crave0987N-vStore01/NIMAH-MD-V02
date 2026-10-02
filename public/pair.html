@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<!-- NIMAH MD — © 2026 Nimah Dev. All Rights Reserved. Proprietary — see LICENSE. -->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+    <title>NIMAH MD — Pairing</title>
+    <link rel="icon" href="https://i.ibb.co/21PLPr29/file-00000000019082118137012f9eb9753e.png">
+    <link rel="preload" as="image" href="https://i.ibb.co/21PLPr29/file-00000000019082118137012f9eb9753e.png">
+    <link rel="preload" as="image" href="/bg.jpg">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        html, body { height: 100%; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #060402;
+            color: #f3e6cf;
+            min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* ---- Ambient backdrop: photo + drifting glow blobs, no icon assets ---- */
+        .backdrop {
+            position: fixed; inset: 0; z-index: 0;
+            background: linear-gradient(180deg, rgba(6,4,2,0.5) 0%, rgba(6,4,2,0.82) 60%, #060402 100%), url('/bg.jpg');
+            background-size: cover; background-position: center; background-attachment: fixed;
+        }
+        .glow { position: fixed; border-radius: 50%; filter: blur(70px); z-index: 0; opacity: 0.55; pointer-events: none; }
+        .glow-a { width: 340px; height: 340px; top: -120px; left: -100px; background: radial-gradient(circle, #f2b705, transparent 70%); animation: drift1 16s ease-in-out infinite; }
+        .glow-b { width: 300px; height: 300px; bottom: -100px; right: -80px; background: radial-gradient(circle, #c98a1a, transparent 70%); animation: drift2 20s ease-in-out infinite; }
+        @keyframes drift1 { 0%,100% { transform: translate(0,0); } 50% { transform: translate(40px, 60px); } }
+        @keyframes drift2 { 0%,100% { transform: translate(0,0); } 50% { transform: translate(-30px, -50px); } }
+
+        .stage { position: relative; z-index: 2; min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 36px 20px 26px; }
+
+        /* ---- Logo shown as-is, full width, no frame/circle around it ---- */
+        .logo-shot { width: 100%; max-width: 380px; margin: 0 auto; animation: riseIn 0.9s ease-out both; }
+        .logo-shot img { width: 100%; display: block; filter: drop-shadow(0 10px 30px rgba(242,183,5,0.25)); }
+        @keyframes riseIn { from { opacity: 0; transform: translateY(-16px) scale(0.97); } to { opacity: 1; transform: translateY(0) scale(1); } }
+
+        /* ---- Scrolling text ticker instead of icon badges ---- */
+        .ticker-wrap { width: 100%; max-width: 420px; overflow: hidden; margin: 6px 0 26px; mask-image: linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent); -webkit-mask-image: linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent); }
+        .ticker { display: flex; white-space: nowrap; animation: scrollTicker 14s linear infinite; }
+        .ticker span { font-size: 11px; letter-spacing: 3px; font-weight: 700; color: #d8b45a; text-transform: uppercase; padding: 0 14px; }
+        @keyframes scrollTicker { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+
+        /* ---- Glass pairing panel ---- */
+        .panel {
+            width: 100%; max-width: 380px;
+            background: rgba(20, 14, 4, 0.55);
+            backdrop-filter: blur(14px);
+            border: 1px solid rgba(242,183,5,0.22);
+            border-radius: 24px;
+            padding: 28px 24px 24px;
+            text-align: center;
+            box-shadow: 0 24px 60px rgba(0,0,0,0.55);
+            animation: riseIn 0.9s ease-out 0.1s both;
+        }
+        .panel-title {
+            font-size: 13px; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 18px; font-weight: 700;
+            background: linear-gradient(90deg, #c9b183, #f2b705, #c9b183);
+            background-size: 200% auto;
+            -webkit-background-clip: text; background-clip: text; color: transparent;
+            animation: shimmerTitle 3s linear infinite;
+        }
+        @keyframes shimmerTitle { to { background-position: -200% center; } }
+        .steps { display: flex; flex-direction: column; gap: 8px; margin-top: 20px; text-align: left; }
+        .step { display: flex; gap: 10px; align-items: flex-start; font-size: 11.5px; color: #c9b183; line-height: 1.4; }
+        .step b { flex-shrink: 0; color: #f2b705; font-size: 12px; }
+
+        /* ---- QR frame with an animated glow border — the border rotates on
+           a pseudo-element BEHIND the QR, the QR image itself never moves,
+           so it stays scannable at all times. ---- */
+        .qr-frame {
+            position: relative; width: 100%; max-width: 230px; aspect-ratio: 1/1; margin: 0 auto;
+            border-radius: 18px; padding: 3px;
+        }
+        .qr-frame::before {
+            content: ''; position: absolute; inset: 0; border-radius: 18px; z-index: 0;
+            background: conic-gradient(from 0deg, #f2b705, transparent 30%, transparent 70%, #f2b705);
+            animation: sweep 3.4s linear infinite;
+        }
+        @keyframes sweep { to { transform: rotate(360deg); } }
+        .qr-inner {
+            position: relative; z-index: 1;
+            width: 100%; height: 100%; border-radius: 15px; background: #fdf6e3;
+            display: flex; align-items: center; justify-content: center; overflow: hidden;
+        }
+        #qrImg { width: 100%; height: 100%; object-fit: contain; display: none; }
+        #qrLoading { color: #7a5200; font-size: 12.5px; font-weight: 700; letter-spacing: 0.5px; }
+
+        .tabs { display: flex; gap: 6px; margin-bottom: 18px; background: rgba(0,0,0,0.3); padding: 4px; border-radius: 14px; }
+        .tab { flex: 1; border: 0; background: transparent; color: #c9b183; font-size: 12px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; padding: 9px 4px; border-radius: 10px; cursor: pointer; transition: 0.2s; }
+        .tab.active { background: linear-gradient(90deg,#f2b705,#ffd166); color: #2a1c00; }
+        .view { display: none; }
+        .view.active { display: block; }
+        .num-input { width: 100%; padding: 13px 14px; border-radius: 12px; border: 1px solid rgba(242,183,5,0.35); background: rgba(0,0,0,0.35); color: #f3e6cf; font-size: 15px; text-align: center; outline: none; letter-spacing: 1px; }
+        .num-input:focus { border-color: #f2b705; }
+        .go-btn { width: 100%; margin-top: 12px; padding: 13px; border: 0; border-radius: 12px; background: linear-gradient(90deg,#f2b705,#ffd166); color: #2a1c00; font-weight: 800; font-size: 13px; letter-spacing: 1px; text-transform: uppercase; cursor: pointer; }
+        .go-btn:disabled { opacity: 0.6; cursor: wait; }
+        .code-box { display: none; margin-top: 16px; padding: 16px 8px; border-radius: 14px; background: #fdf6e3; color: #3a2800; font-size: 28px; font-weight: 800; letter-spacing: 4px; user-select: all; cursor: pointer; }
+        .instruction { font-size: 12.5px; color: #d8c49a; margin-top: 16px; line-height: 1.5; }
+        .hint { display: block; font-size: 11px; color: #a68a55; margin-top: 8px; }
+
+        .status-row { display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 20px; font-size: 12px; color: #d8c49a; }
+        .status-dot { width: 8px; height: 8px; border-radius: 50%; background: #6b5a3a; transition: 0.3s; }
+        .status-dot.online { background: #ffd166; box-shadow: 0 0 10px #ffd166; animation: pulseDot 1.6s ease-in-out infinite; }
+        .status-dot.offline { background: #b23a3a; box-shadow: 0 0 8px #b23a3a; }
+        @keyframes pulseDot { 0%,100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.5); opacity: 0.6; } }
+
+        /* ---- Stats — plain gradient numbers, deliberately no icon badges ---- */
+        .stats { display: flex; gap: 0; width: 100%; max-width: 380px; margin-top: 22px; }
+        .stat { flex: 1; text-align: center; padding: 10px 4px; }
+        .stat:not(:last-child) { border-right: 1px solid rgba(242,183,5,0.18); }
+        .stat b { display: block; font-size: 19px; font-weight: 800; background: linear-gradient(90deg,#f2b705,#ffd166); -webkit-background-clip: text; background-clip: text; color: transparent; }
+        .stat span { display: block; font-size: 9.5px; letter-spacing: 1px; text-transform: uppercase; color: #a68a55; margin-top: 2px; }
+
+        .foot { margin-top: 28px; font-size: 10.5px; letter-spacing: 1.5px; text-transform: uppercase; color: #7a6a45; text-align: center; }
+        .foot b { color: #d8b45a; }
+
+        /* ---- Drifting embers instead of an icon/emoji sticker sheet ---- */
+        .ember { position: fixed; bottom: -4vh; border-radius: 50%; background: #f2b705; pointer-events: none; z-index: 1; animation: emberRise linear infinite; box-shadow: 0 0 6px #f2b705; }
+        @keyframes emberRise {
+            0% { transform: translateY(0) translateX(0); opacity: 0; }
+            10% { opacity: 0.8; }
+            90% { opacity: 0.5; }
+            100% { transform: translateY(-108vh) translateX(24px); opacity: 0; }
+        }
+
+        @media (min-width: 480px) {
+            .stage { padding-top: 48px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="backdrop"></div>
+    <div class="glow glow-a"></div>
+    <div class="glow glow-b"></div>
+    <div id="embers"></div>
+
+    <div class="stage">
+        <div class="logo-shot">
+            <img src="https://i.ibb.co/21PLPr29/file-00000000019082118137012f9eb9753e.png" alt="NIMAH MD">
+        </div>
+
+        <div class="ticker-wrap">
+            <div class="ticker">
+                <span>DREAM</span><span>·</span><span>CODE</span><span>·</span><span>BUILD</span><span>·</span><span>GROW</span><span>·</span><span>MULTI-DEVICE WHATSAPP BOT</span><span>·</span>
+                <span>DREAM</span><span>·</span><span>CODE</span><span>·</span><span>BUILD</span><span>·</span><span>GROW</span><span>·</span><span>MULTI-DEVICE WHATSAPP BOT</span><span>·</span>
+            </div>
+        </div>
+
+        <div class="panel">
+            <div class="tabs">
+                <button class="tab active" id="tabQr" onclick="switchTab('qr')">QR Code</button>
+                <button class="tab" id="tabCode" onclick="switchTab('code')">Pair Code</button>
+            </div>
+
+            <div class="view" id="viewCode">
+                <div class="panel-title">Link with phone number</div>
+                <input class="num-input" id="numInput" type="tel" inputmode="numeric" placeholder="947XXXXXXXX" autocomplete="off">
+                <button class="go-btn" id="codeBtn" onclick="getPairCode()">Get Pair Code</button>
+                <div class="code-box" id="codeBox" onclick="copyCode()"></div>
+                <div class="steps">
+                    <div class="step"><b>1.</b> Enter your number with country code (no + or spaces)</div>
+                    <div class="step"><b>2.</b> WhatsApp → Settings → Linked Devices → Link a Device</div>
+                    <div class="step"><b>3.</b> Tap "Link with phone number instead" and enter the code</div>
+                </div>
+            </div>
+
+            <div class="view active" id="viewQr">
+            <div class="panel-title">Scan to connect</div>
+            <div class="qr-frame">
+                <div class="qr-inner">
+                    <img id="qrImg" src="" alt="QR code">
+                    <div id="qrLoading">Preparing your code…</div>
+                </div>
+            </div>
+            <div class="steps">
+                <div class="step"><b>1.</b> Open WhatsApp on your phone</div>
+                <div class="step"><b>2.</b> Go to Settings → Linked Devices</div>
+                <div class="step"><b>3.</b> Tap "Link a Device" and scan the code above</div>
+            </div>
+            <span class="hint" id="qrHint">Refreshes automatically</span>
+            </div>
+
+            <div class="status-row">
+                <span class="status-dot" id="statusDot"></span>
+                <span id="statusText">Checking status…</span>
+            </div>
+        </div>
+
+        <div class="stats">
+            <div class="stat"><b>220+</b><span>Commands</span></div>
+            <div class="stat"><b id="statBots">0</b><span>Bots Online</span></div>
+            <div class="stat"><b>24/7</b><span>Uptime</span></div>
+        </div>
+
+        <div class="foot">Powered By <b>Nimah Dev</b></div>
+    </div>
+
+    <script>
+        // ---- Sound design: original short arpeggio motifs (no external files) ----
+        let audioCtx = null;
+        function getCtx() {
+            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            return audioCtx;
+        }
+        function tone(freq, duration, delay, type, gainPeak) {
+            try {
+                const ctx = getCtx();
+                if (ctx.state === 'suspended') ctx.resume();
+                setTimeout(() => {
+                    const osc = ctx.createOscillator();
+                    const gain = ctx.createGain();
+                    osc.type = type || 'sine';
+                    osc.frequency.value = freq;
+                    gain.gain.setValueAtTime(gainPeak || 0.07, ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + duration / 1000);
+                    osc.connect(gain).connect(ctx.destination);
+                    osc.start();
+                    osc.stop(ctx.currentTime + duration / 1000);
+                }, delay || 0);
+            } catch (e) {}
+        }
+        function playWelcome() {
+            tone(440, 120, 0, 'triangle', 0.05);
+            tone(659, 140, 110, 'triangle', 0.05);
+            tone(880, 200, 240, 'triangle', 0.06);
+        }
+        function playQrReady() { tone(587, 90, 0, 'sine', 0.05); }
+        function playConnected() {
+            tone(523, 110, 0, 'triangle', 0.07);
+            tone(659, 110, 100, 'triangle', 0.07);
+            tone(784, 140, 200, 'triangle', 0.08);
+            tone(1046, 240, 340, 'triangle', 0.08);
+        }
+        let audioUnlocked = false;
+        function unlockAudioOnce() {
+            if (audioUnlocked) return;
+            audioUnlocked = true;
+            try { const ctx = getCtx(); if (ctx.state === 'suspended') ctx.resume(); } catch (e) {}
+            playWelcome();
+            ['click', 'touchstart', 'keydown'].forEach(evt => document.removeEventListener(evt, unlockAudioOnce));
+        }
+        ['click', 'touchstart', 'keydown'].forEach(evt => document.addEventListener(evt, unlockAudioOnce));
+
+        // ---- Session bootstrap (per-browser bot session) ----
+        let sessionId = null;
+        async function ensureSession() {
+            const stored = localStorage.getItem('nimah_session_id');
+            if (stored) {
+                try {
+                    const res = await fetch('/health?session=' + encodeURIComponent(stored));
+                    const data = await res.json();
+                    if (data.exists) { sessionId = stored; return sessionId; }
+                } catch (e) {}
+            }
+            const res = await fetch('/api/new-session', { method: 'POST' });
+            const data = await res.json();
+            sessionId = data.sessionId;
+            localStorage.setItem('nimah_session_id', sessionId);
+            return sessionId;
+        }
+
+        // ---- Status polling ----
+        let hasPlayedConnectChime = false;
+        let statusInterval = null;
+        async function checkStatus() {
+            try {
+                const res = await fetch('/health?session=' + encodeURIComponent(sessionId));
+                const data = await res.json();
+                const dot = document.getElementById('statusDot');
+                const text = document.getElementById('statusText');
+                if (data.connected) {
+                    dot.className = 'status-dot online';
+                    text.innerText = 'Bot connected';
+                    if (!hasPlayedConnectChime) { hasPlayedConnectChime = true; playConnected(); }
+                    if (statusInterval) { clearInterval(statusInterval); statusInterval = setInterval(checkStatus, 8000); }
+                } else {
+                    dot.className = 'status-dot offline';
+                    text.innerText = 'Waiting for connection…';
+                }
+            } catch (e) {
+                document.getElementById('statusText').innerText = 'Status unavailable';
+            }
+        }
+        function pollStatus(fast) {
+            checkStatus();
+            if (statusInterval) clearInterval(statusInterval);
+            statusInterval = setInterval(checkStatus, fast ? 3000 : 8000);
+        }
+
+        // ---- Stats polling ----
+        async function refreshStats() {
+            try {
+                const res = await fetch('/api/stats');
+                const data = await res.json();
+                const el = document.getElementById('statBots');
+                if (el) el.innerText = data.active;
+            } catch (e) {}
+        }
+
+        // ---- QR polling ----
+        let qrInterval = null;
+        let hasPlayedQrChime = false;
+        function refreshQR() {
+            const img = document.getElementById('qrImg');
+            const loading = document.getElementById('qrLoading');
+            const hint = document.getElementById('qrHint');
+            const testImg = new Image();
+            testImg.onload = () => {
+                img.src = testImg.src;
+                img.style.display = 'block';
+                loading.style.display = 'none';
+                hint.innerText = 'Refreshes automatically';
+                if (!hasPlayedQrChime) { hasPlayedQrChime = true; playQrReady(); }
+            };
+            testImg.onerror = async () => {
+                try {
+                    const res = await fetch('/qr?session=' + encodeURIComponent(sessionId));
+                    const data = await res.json().catch(() => null);
+                    if (data?.error === 'Bot is already connected!') {
+                        hint.innerText = 'Already connected';
+                        if (qrInterval) { clearInterval(qrInterval); qrInterval = null; }
+                        return;
+                    }
+                } catch (e) {}
+                loading.innerText = 'Waiting for code…';
+            };
+            testImg.src = '/qr?session=' + encodeURIComponent(sessionId) + '&t=' + Date.now();
+        }
+        function startQrPolling() {
+            refreshQR();
+            if (qrInterval) clearInterval(qrInterval);
+            qrInterval = setInterval(refreshQR, 5000);
+            pollStatus(true);
+        }
+
+        // ---- Tabs + pair code ----
+        function switchTab(t) {
+            document.getElementById('viewQr').classList.toggle('active', t === 'qr');
+            document.getElementById('viewCode').classList.toggle('active', t === 'code');
+            document.getElementById('tabQr').classList.toggle('active', t === 'qr');
+            document.getElementById('tabCode').classList.toggle('active', t === 'code');
+        }
+        async function getPairCode() {
+            const btn = document.getElementById('codeBtn');
+            const box = document.getElementById('codeBox');
+            const number = document.getElementById('numInput').value.replace(/\D/g, '');
+            if (number.length < 8) { box.style.display = 'block'; box.style.fontSize = '13px'; box.style.letterSpacing = '0'; box.innerText = 'Enter a valid number with country code.'; return; }
+            btn.disabled = true; btn.innerText = 'Generating…';
+            box.style.display = 'none';
+            try {
+                const res = await fetch('/api/pair-code', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ session: sessionId, number }) });
+                const data = await res.json();
+                box.style.display = 'block';
+                if (data.code) { box.style.fontSize = '28px'; box.style.letterSpacing = '4px'; box.innerText = data.code; playQrReady(); }
+                else { box.style.fontSize = '13px'; box.style.letterSpacing = '0'; box.innerText = data.error || 'Failed. Try again.'; }
+            } catch (e) {
+                box.style.display = 'block'; box.style.fontSize = '13px'; box.style.letterSpacing = '0'; box.innerText = 'Network error. Try again.';
+            }
+            btn.disabled = false; btn.innerText = 'Get Pair Code';
+        }
+        function copyCode() {
+            const t = document.getElementById('codeBox').innerText;
+            try { navigator.clipboard.writeText(t.replace(/-/g, '')); } catch (e) {}
+        }
+
+        (async function init() {
+            await ensureSession();
+            startQrPolling();
+            refreshStats();
+            setInterval(refreshStats, 5000);
+        })();
+
+        // ---- Drifting embers (plain CSS dots — no icon assets) ----
+        function spawnEmbers() {
+            const wrap = document.getElementById('embers');
+            const count = window.innerWidth < 500 ? 12 : 20;
+            for (let i = 0; i < count; i++) {
+                const e = document.createElement('span');
+                e.className = 'ember';
+                const size = 2 + Math.random() * 3;
+                e.style.width = size + 'px';
+                e.style.height = size + 'px';
+                e.style.left = Math.random() * 100 + 'vw';
+                const duration = 9 + Math.random() * 10;
+                e.style.animationDuration = duration + 's';
+                e.style.animationDelay = (-Math.random() * duration) + 's';
+                wrap.appendChild(e);
+            }
+        }
+        spawnEmbers();
+    </script>
+</body>
+</html>
