@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<!-- NIMAH MD — © 2026 Nimah Dev. All Rights Reserved. Proprietary — see LICENSE. -->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NIMAH MD — Admin</title>
+<link rel="icon" href="/logo.jpg">
+<link rel="stylesheet" href="/ui.css?v=3">
+<style>
+  #loginBox { max-width: 380px; margin: 9vh auto 0; }
+  #dash { display: none; }
+
+  .ledger { border-top: 1px solid var(--line); }
+  .row { display: grid; grid-template-columns: 42px 1fr auto; gap: 8px 14px; padding: 16px 0; border-bottom: 1px dashed var(--line); align-items: start; }
+  .row .no { font-family: var(--mono); font-size: 12px; color: var(--gold); padding-top: 4px; }
+  .row .who { min-width: 0; }
+  .row .label { font-family: var(--serif); font-size: 19px; color: var(--paper); }
+  .row .sid { font-family: var(--mono); font-size: 11px; color: var(--mute); word-break: break-all; margin-top: 2px; }
+  .row .side { text-align: right; display: flex; flex-direction: column; gap: 10px; align-items: flex-end; }
+  .row .extra { grid-column: 2 / -1; display: flex; flex-wrap: wrap; gap: 8px 22px; align-items: center; }
+  .row .extra .in { flex: 1; min-width: 170px; margin-top: 0; font-size: 14px; }
+  .empty { padding: 26px 0; font-family: var(--mono); font-size: 12px; letter-spacing: 1px; color: var(--mute); text-align: center; }
+  .hint { font-family: var(--mono); font-size: 10.5px; letter-spacing: 1.5px; text-transform: uppercase; color: #5f563f; margin-top: 12px; }
+  .cmd { font-family: var(--mono); color: var(--gold); font-size: 15px; }
+  .grid2 { display: grid; gap: 28px; }
+  @media (min-width: 860px) { .grid2 { grid-template-columns: 1fr 1fr; } }
+  .figures { margin-bottom: 30px; }
+  @media (max-width: 520px) { .row { grid-template-columns: 30px 1fr; } .row .side { grid-column: 2; flex-direction: row; align-items: center; justify-content: space-between; text-align: left; } }
+</style>
+</head>
+<body>
+<div class="page">
+  <header class="mast rise">
+    <div class="name"><small>Restricted</small>NIMAH MD</div>
+    <div class="meta">Control room<br><span id="clock"></span></div>
+  </header>
+
+  <!-- ---------- sign in ---------- -->
+  <div class="sheet rise d1" id="loginBox">
+    <div class="eyebrow">Admin sign in</div>
+    <h1 class="display" style="font-size:34px">Who goes there?</h1>
+    <label class="f" for="pwInput">Password</label>
+    <input class="in" type="password" id="pwInput" placeholder="admin password" autocomplete="current-password">
+    <button class="btn block" onclick="doLogin()">Enter</button>
+    <div class="msg bad" id="loginErr"></div>
+    <div class="hint">Locks out after 5 wrong tries</div>
+  </div>
+
+  <!-- ---------- dashboard ---------- -->
+  <div id="dash">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin:-8px 0 18px">
+      <div class="eyebrow">Every bot paired through this deployment</div>
+      <button class="btn quiet" onclick="logout()">Sign out</button>
+    </div>
+
+    <div class="figures rise" id="statStrip"></div>
+
+    <section class="sheet rise d1">
+      <div class="sec-head"><span class="no">01</span><h2>Paired bots</h2><span class="aside">Refreshes every 8s</span></div>
+      <div class="ledger" id="sessionList"></div>
+    </section>
+
+    <div class="grid2" style="margin-top:26px">
+      <section class="sheet rise d2" style="margin-top:0">
+        <div class="sec-head"><span class="no">02</span><h2>Send a message</h2></div>
+        <label class="f" for="bSession" style="margin-top:0">From bot</label>
+        <select class="in" id="bSession"></select>
+        <label class="f" for="bJid">To (chat JID)</label>
+        <input class="in" type="text" id="bJid" placeholder="94771234567@s.whatsapp.net">
+        <label class="f" for="bText">Message</label>
+        <textarea class="in" id="bText" placeholder="Write it here"></textarea>
+        <button class="btn" onclick="sendBroadcast()">Send</button>
+        <div class="msg" id="broadcastMsg"></div>
+      </section>
+
+      <section class="sheet rise d3" style="margin-top:0">
+        <div class="sec-head"><span class="no">03</span><h2>Custom commands</h2><span class="aside">No code</span></div>
+        <label class="f" for="ccName" style="margin-top:0">Name (without the dot)</label>
+        <input class="in" type="text" id="ccName" placeholder="rules">
+        <label class="f" for="ccReply">Reply text</label>
+        <textarea class="in" id="ccReply" placeholder="What the bot says when someone types it"></textarea>
+        <button class="btn" onclick="addCustomCommand()">Add command</button>
+        <div class="msg" id="ccMsg"></div>
+        <div class="ledger" id="ccList" style="margin-top:6px"></div>
+      </section>
+    </div>
+  </div>
+
+  <div class="foot">Nimah Dev &middot; <b>private</b> &middot; 2026</div>
+</div>
+
+<script>
+  let adminToken = localStorage.getItem('nimah_admin_token') || '';
+  let dashTimer = null;
+
+  // little clock in the masthead (Sri Lanka time)
+  function tickClock() {
+    try { document.getElementById('clock').innerText = new Date().toLocaleTimeString('en-GB', { timeZone: 'Asia/Colombo', hour: '2-digit', minute: '2-digit' }); } catch (e) {}
+  }
+  tickClock(); setInterval(tickClock, 15000);
+
+  async function doLogin() {
+    const pw = document.getElementById('pwInput').value;
+    const err = document.getElementById('loginErr');
+    err.innerText = '';
+    try {
+      const res = await fetch('/api/admin/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ password: pw }) });
+      const data = await res.json();
+      if (!res.ok) { err.innerText = data.error || 'Login failed.'; return; }
+      adminToken = data.token;
+      localStorage.setItem('nimah_admin_token', adminToken);
+      showDash();
+    } catch (e) { err.innerText = 'Server connection error.'; }
+  }
+
+  function adminFetch(url, opts) {
+    opts = opts || {};
+    opts.headers = Object.assign({ 'x-admin-token': adminToken, 'Content-Type': 'application/json' }, opts.headers || {});
+    return fetch(url, opts);
+  }
+
+  function showDash() {
+    document.getElementById('loginBox').style.display = 'none';
+    document.getElementById('dash').style.display = 'block';
+    refreshAll();
+    if (dashTimer) clearInterval(dashTimer);
+    dashTimer = setInterval(refreshAll, 8000);
+  }
+
+  async function refreshAll() { await Promise.all([refreshStats(), refreshSessions(), refreshCustomCommands()]); }
+
+  function escapeHtml(str) { const d = document.createElement('div'); d.innerText = str; return d.innerHTML; }
+  const pad = (n) => String(n + 1).padStart(2, '0');
+
+  async function refreshCustomCommands() {
+    const res = await adminFetch('/api/admin/custom-commands');
+    if (res.status === 401) return logout();
+    const data = await res.json();
+    const list = document.getElementById('ccList');
+    list.innerHTML = data.commands.map((c, i) => `
+      <div class="row">
+        <div class="no">${pad(i)}</div>
+        <div class="who">
+          <div class="cmd">.${escapeHtml(c.name)}</div>
+          <div class="sid">${escapeHtml(c.reply.slice(0, 90))}${c.reply.length > 90 ? '...' : ''}</div>
+        </div>
+        <div class="side"><button class="btn quiet danger" onclick="deleteCustomCommand('${escapeHtml(c.name)}')">Delete</button></div>
+      </div>`).join('');
+  }
+
+  async function addCustomCommand() {
+    const name = document.getElementById('ccName').value.trim();
+    const reply = document.getElementById('ccReply').value.trim();
+    const msg = document.getElementById('ccMsg');
+    msg.className = 'msg'; msg.innerText = 'Adding';
+    try {
+      const res = await adminFetch('/api/admin/custom-commands', { method: 'POST', body: JSON.stringify({ name, reply }) });
+      const data = await res.json();
+      if (!res.ok) { msg.className = 'msg bad'; msg.innerText = data.error || 'Failed to add.'; return; }
+      msg.className = 'msg ok'; msg.innerText = 'Added .' + data.name;
+      document.getElementById('ccName').value = ''; document.getElementById('ccReply').value = '';
+      refreshCustomCommands();
+    } catch (e) { msg.className = 'msg bad'; msg.innerText = 'Server connection error.'; }
+  }
+
+  async function deleteCustomCommand(name) {
+    if (!confirm('Delete .' + name + '?')) return;
+    await adminFetch('/api/admin/custom-commands/' + encodeURIComponent(name), { method: 'DELETE' });
+    refreshCustomCommands();
+  }
+
+  async function refreshStats() {
+    const res = await adminFetch('/api/admin/stats');
+    if (res.status === 401) return logout();
+    const d = await res.json();
+    document.getElementById('statStrip').innerHTML = `
+      <div class="fig"><b>${d.active}</b><span>Active</span></div>
+      <div class="fig"><b>${d.total}</b><span>Sessions</span></div>
+      <div class="fig"><b>${d.commands}+</b><span>Commands</span></div>
+      <div class="fig"><b>${d.memoryMb}<small style="font-size:14px;color:var(--mute)"> MB</small></b><span>Memory</span></div>`;
+  }
+
+  async function refreshSessions() {
+    const res = await adminFetch('/api/admin/sessions');
+    if (res.status === 401) return logout();
+    const data = await res.json();
+    const list = document.getElementById('sessionList');
+    const bSel = document.getElementById('bSession');
+    // do not wipe a label someone is typing
+    const typing = document.activeElement && list.contains(document.activeElement) && document.activeElement.tagName === 'INPUT';
+    if (!data.sessions.length) {
+      list.innerHTML = '<div class="empty">No bots paired yet. Share the pairing link to begin.</div>';
+      bSel.innerHTML = '<option value="">No bots available</option>';
+      return;
+    }
+    if (!typing) {
+      list.innerHTML = data.sessions.map((s, i) => `
+        <div class="row">
+          <div class="no">${pad(i)}</div>
+          <div class="who">
+            <div class="label">${s.label ? escapeHtml(s.label) : 'Unnamed bot'}</div>
+            <div class="sid">${s.id}</div>
+          </div>
+          <div class="side">
+            <span class="stamp ${s.connected ? 'live' : 'down'}">${s.connected ? 'Online' : 'Offline'}</span>
+            <button class="btn quiet" onclick="restartSession('${s.id}')">Restart</button>
+          </div>
+          <div class="extra">
+            <input class="in" type="text" placeholder="Label for this bot" value="${s.label ? escapeHtml(s.label) : ''}" id="label-${s.id}">
+            <button class="btn quiet" onclick="saveLabel('${s.id}')">Save label</button>
+          </div>
+          <div class="extra">
+            <span class="tick ${s.autoStatus.view ? 'on' : ''}" onclick="toggleAuto('${s.id}','view',${!s.autoStatus.view})"><i></i>Status view <b>${s.autoStatus.view ? 'on' : 'off'}</b></span>
+            <span class="tick ${s.autoStatus.react ? 'on' : ''}" onclick="toggleAuto('${s.id}','react',${!s.autoStatus.react})"><i></i>Status react ${escapeHtml(s.autoStatus.emoji || '')} <b>${s.autoStatus.react ? 'on' : 'off'}</b></span>
+          </div>
+        </div>`).join('');
+    }
+    const keep = bSel.value;
+    bSel.innerHTML = data.sessions.map(s => `<option value="${s.id}">${s.label ? escapeHtml(s.label) : s.id.slice(0, 8)} (${s.connected ? 'online' : 'offline'})</option>`).join('');
+    if (keep) bSel.value = keep;
+  }
+
+  async function toggleAuto(id, field, value) {
+    const body = {}; body[field] = value;
+    await adminFetch('/api/admin/sessions/' + id + '/autostatus', { method: 'POST', body: JSON.stringify(body) });
+    refreshSessions();
+  }
+  async function saveLabel(id) {
+    const label = document.getElementById('label-' + id).value;
+    await adminFetch('/api/admin/sessions/' + id + '/label', { method: 'POST', body: JSON.stringify({ label }) });
+    refreshSessions();
+  }
+  async function restartSession(id) {
+    if (!confirm('Restart this bot? It will briefly disconnect.')) return;
+    await adminFetch('/api/admin/sessions/' + id + '/restart', { method: 'POST' });
+    refreshSessions();
+  }
+
+  async function sendBroadcast() {
+    const sessionId = document.getElementById('bSession').value;
+    const jid = document.getElementById('bJid').value.trim();
+    const text = document.getElementById('bText').value.trim();
+    const el = document.getElementById('broadcastMsg');
+    el.className = 'msg'; el.innerText = 'Sending';
+    try {
+      const res = await adminFetch('/api/admin/broadcast', { method: 'POST', body: JSON.stringify({ sessionId, jid, text }) });
+      const data = await res.json();
+      if (!res.ok) { el.className = 'msg bad'; el.innerText = data.error || 'Failed to send.'; return; }
+      el.className = 'msg ok'; el.innerText = 'Sent';
+      document.getElementById('bText').value = '';
+    } catch (e) { el.className = 'msg bad'; el.innerText = 'Server connection error.'; }
+  }
+
+  async function logout() {
+    try { await adminFetch('/api/admin/logout', { method: 'POST' }); } catch (e) {}
+    localStorage.removeItem('nimah_admin_token');
+    location.reload();
+  }
+
+  if (adminToken) showDash();
+  document.getElementById('pwInput').addEventListener('keydown', (e) => { if (e.key === 'Enter') doLogin(); });
+</script>
+</body>
+</html>
