@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<!-- NIMAH MD — © 2026 Nimah Dev. All Rights Reserved. -->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f1eee8">
+<title>NIMAH MD — My bot</title>
+<link rel="icon" href="/logo.jpg">
+<link rel="stylesheet" href="/nimah.css">
+</head>
+<body>
+<div class="bg"></div><div class="grain"></div><div class="dust" id="dust"></div>
+
+<main class="shell">
+  <header class="mast reveal">
+    <div class="plate"><img src="/logo.jpg" alt="NIMAH MD"></div>
+    <h1 class="display">Your bot,<br><em>your rules.<svg viewBox="0 0 200 10" preserveAspectRatio="none"><path d="M2 6 C 30 1, 55 9, 90 4 S 160 8, 198 3"/></svg></em></h1>
+  </header>
+
+  <section class="sheet reveal d1" id="loginBox">
+    <i class="cm-a"></i><i class="cm-b"></i>
+    <div class="kicker">Sign in</div>
+    <p class="lede" style="margin-top:8px">Use the number and password the bot sent to your own WhatsApp chat when it connected.</p>
+    <label class="f" for="phoneInput">WhatsApp number</label>
+    <input class="in" id="phoneInput" type="tel" inputmode="numeric" placeholder="947XXXXXXXX" autocomplete="username">
+    <label class="f" for="pwInput">Password</label>
+    <input class="in" id="pwInput" type="password" placeholder="8 characters" autocomplete="current-password">
+    <button class="btn" onclick="doLogin()">Open my settings</button>
+    <div class="msg err" id="err"></div>
+    <p class="hint" style="text-align:left">This page only ever shows your own bot.</p>
+  </section>
+
+  <section class="sheet reveal d1" id="panel" style="display:none">
+    <i class="cm-a"></i><i class="cm-b"></i>
+    <div class="kicker">Control room</div>
+    <div class="sheet-title">Hello, <em id="whoName">friend</em></div>
+
+    <label class="f" for="labelInput">Bot name</label>
+    <input class="in" id="labelInput" type="text" maxlength="40" placeholder="Give your bot a name">
+    <button class="btn ghost sm" style="margin-top:12px" onclick="saveLabel()">Save name</button>
+
+    <hr class="rule">
+    <div class="kicker">Status automation</div>
+    <div class="switch" id="viewChip" onclick="toggleField('view')"><div class="t"><b>Watch statuses</b><span>Mark contacts' statuses as seen</span></div><i class="sw"></i></div>
+    <div class="switch" id="reactChip" onclick="toggleField('react')"><div class="t"><b>React to statuses</b><span>Send a reaction after viewing</span></div><i class="sw"></i></div>
+
+    <label class="f" for="emojiInput">Reaction character</label>
+    <div class="bot-row" style="margin-top:0"><input class="in center" id="emojiInput" type="text" maxlength="4" style="max-width:110px"><button class="btn ghost sm" onclick="saveEmoji()">Save</button></div>
+
+    <div class="msg" id="saveMsg"></div>
+    <div class="status"><span class="dot" id="statusDot"></span><span id="statusText">Checking</span></div>
+    <button class="btn ghost" onclick="logout()" style="margin-top:20px">Sign out</button>
+  </section>
+
+  <p class="foot reveal d3">Crafted by <b>Nimah Dev</b></p>
+</main>
+
+<script>
+let creds = JSON.parse(localStorage.getItem('nimah_user_creds') || 'null');
+let me = null, poll = null;
+const $ = (id) => document.getElementById(id);
+const authFetch = (url, opts) => { opts = opts || {}; opts.headers = Object.assign({ 'x-user-phone': creds.phone, 'x-user-password': creds.password, 'Content-Type': 'application/json' }, opts.headers || {}); return fetch(url, opts); };
+
+async function doLogin() {
+  const phone = $('phoneInput').value.trim(), password = $('pwInput').value.trim(), err = $('err');
+  err.innerText = '';
+  if (location.protocol !== 'http:' && location.protocol !== 'https:') { err.innerText = 'Open this page from its real web link, not a downloaded file.'; return; }
+  try {
+    const r = await fetch('/api/user/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ phone, password }) });
+    const d = await r.json();
+    if (!r.ok) { err.innerText = d.error || 'Login failed.'; return; }
+    creds = { phone, password }; localStorage.setItem('nimah_user_creds', JSON.stringify(creds)); showPanel();
+  } catch (e) { err.innerText = 'Server connection error.'; }
+}
+async function loadMe() {
+  const r = await authFetch('/api/user/me');
+  if (r.status === 401) return logout();
+  me = await r.json();
+  $('statusDot').className = 'dot ' + (me.connected ? 'on' : 'off');
+  $('statusText').innerText = me.connected ? 'Bot connected' : 'Bot offline';
+  $('whoName').innerText = me.label || creds.phone;
+  if (document.activeElement !== $('labelInput')) $('labelInput').value = me.label || '';
+  if (document.activeElement !== $('emojiInput')) $('emojiInput').value = me.autoStatus.emoji || '';
+  $('viewChip').classList.toggle('on', !!me.autoStatus.view);
+  $('reactChip').classList.toggle('on', !!me.autoStatus.react);
+}
+function showPanel() { $('loginBox').style.display = 'none'; $('panel').style.display = 'block'; loadMe(); clearInterval(poll); poll = setInterval(loadMe, 10000); }
+function flash(t) { const m = $('saveMsg'); m.className = 'msg ok'; m.innerText = t; setTimeout(() => { m.innerText = ''; }, 2200); }
+async function saveLabel() { await authFetch('/api/user/label', { method: 'POST', body: JSON.stringify({ label: $('labelInput').value }) }); flash('Name saved'); loadMe(); }
+async function saveEmoji() { const e = $('emojiInput').value.trim(); if (!e) return; await authFetch('/api/user/autostatus', { method: 'POST', body: JSON.stringify({ emoji: e }) }); flash('Reaction saved'); loadMe(); }
+async function toggleField(f) { await authFetch('/api/user/autostatus', { method: 'POST', body: JSON.stringify({ [f]: !me.autoStatus[f] }) }); loadMe(); }
+function logout() { localStorage.removeItem('nimah_user_creds'); location.reload(); }
+$('pwInput').addEventListener('keydown', (e) => { if (e.key === 'Enter') doLogin(); });
+if (creds) showPanel();
+
+(function () {
+  const w = $('dust'), n = innerWidth < 500 ? 12 : 20;
+  for (let i = 0; i < n; i++) { const e = document.createElement('i'), du = 9 + Math.random() * 10; e.style.left = Math.random() * 100 + 'vw'; e.style.animationDuration = du + 's'; e.style.animationDelay = (-Math.random() * du) + 's'; w.appendChild(e); }
+})();
+</script>
+</body>
+</html>
