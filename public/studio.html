@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<!-- NIMAH MD — © 2026 Nimah Dev. All Rights Reserved. -->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f1eee8">
+<title>NIMAH MD — Command Studio</title>
+<link rel="icon" href="/logo.jpg">
+<link rel="stylesheet" href="/nimah.css">
+<style>
+  .row2{display:grid;gap:14px}@media(min-width:640px){.row2{grid-template-columns:1fr 1fr}}
+  .help{font:400 11.5px/1.6 var(--mono);color:var(--mute);margin-top:8px}
+  .help code,.pill{font-family:var(--mono);background:rgba(14,13,13,.07);padding:1px 6px}
+  pre.raw{max-height:280px;overflow:auto;background:var(--ink);color:#e9e5dc;font:400 11.5px/1.5 var(--mono);padding:12px;white-space:pre-wrap;word-break:break-all;margin-top:8px}
+  .res{border:1.5px solid var(--ink);padding:14px;margin-top:14px;background:rgba(255,255,255,.6);display:none}
+  .res b.ok{color:var(--green)}.res b.bad{color:var(--red)}
+  .item{display:flex;align-items:center;gap:10px;border-bottom:1px dashed var(--line);padding:12px 0;flex-wrap:wrap}
+  .item code{font:500 13px var(--mono);color:var(--red)}
+  .item .meta{flex:1;min-width:140px;color:var(--ink3);font-size:12px}
+  .item .meta small{display:block;color:var(--dim);font:400 11px var(--mono)}
+  .item .err{color:var(--red)}
+  .mini{width:auto;margin:0;padding:8px 12px;font-size:10.5px;box-shadow:3px 3px 0 var(--red)}
+  .mini.ghost{box-shadow:none}
+  .chipbtn{cursor:pointer}
+  .hide{display:none}
+  .linkrow{display:flex;gap:8px}.linkrow .btn{width:auto;margin:0;flex:none}
+</style>
+</head>
+<body>
+<div class="bg"></div><div class="grain"></div>
+<main class="shell wide" id="dash">
+  <div class="topbar">
+    <div class="brandmark">Nimah <b>MD</b> <span class="stamp" style="margin-left:10px">studio</span></div>
+    <div style="display:flex;gap:8px"><a class="btn ghost sm" style="margin:0;text-decoration:none" href="/brand">Brand</a><a class="btn ghost sm" style="margin:0;text-decoration:none" href="/admin">Admin</a><button class="btn ghost sm" style="margin:0" onclick="logout()">Sign out</button></div>
+  </div>
+  <p class="lede" style="max-width:none">Add or fix commands and API keys here. Changes are live immediately — no code, no redeploy.</p>
+
+  <section class="sec">
+    <div class="sec-h"><span class="no">01</span><h2>API keys</h2><span class="note">stored in your database</span></div>
+    <div class="sheet"><i class="cm-a"></i><i class="cm-b"></i>
+      <div class="row2">
+        <div><label class="f" style="margin-top:0" for="kName">Key name</label><input class="in" id="kName" placeholder="CHAMA" value="CHAMA"></div>
+        <div><label class="f" style="margin-top:0" for="kVal">Key</label><input class="in" id="kVal" type="password" placeholder="chama_api_…" autocomplete="off"></div>
+      </div>
+      <button class="btn" onclick="saveKey()">Save key</button>
+      <div class="msg" id="kMsg"></div>
+      <p class="help">Use it in any command address as <code>{{key:CHAMA}}</code>. Keys are never shown to chat users and are masked in test results. The built-in downloaders (.ytmp3, .ytmp4, .fb, .wadp) use the key named <b>CHAMA</b>.</p>
+      <div id="keyList"></div>
+    </div>
+  </section>
+
+  <section class="sec">
+    <div class="sec-h"><span class="no">02</span><h2>Command editor</h2><span class="note" id="editNote">new command</span></div>
+    <div class="sheet"><i class="cm-a"></i><i class="cm-b"></i>
+      <label class="f" style="margin-top:0" for="tpl">Start from a template</label>
+      <select class="in" id="tpl" onchange="applyTemplate()">
+        <option value="">Blank</option>
+        <option value="mp3">Chama · YouTube → MP3</option>
+        <option value="mp4">Chama · YouTube → MP4 video</option>
+        <option value="fb">Chama · Facebook video</option>
+        <option value="dp">Chama · WhatsApp number photo</option>
+        <option value="text">Simple text reply</option>
+      </select>
+
+      <div class="row2">
+        <div><label class="f" for="eAccess">Who can use it</label><select class="in" id="eAccess"><option value="all">Everyone</option><option value="group">Groups only</option><option value="admin">Group admins</option><option value="owner">Bot owner only</option></select></div>
+        <div></div>
+      </div>
+      <div class="row2">
+        <div><label class="f" for="eName">Command name (no dot)</label><input class="in" id="eName" placeholder="insta" maxlength="24"></div>
+        <div><label class="f" for="eType">Kind</label><select class="in" id="eType" onchange="syncForm()"><option value="api">API command</option><option value="text">Text reply</option></select></div>
+      </div>
+      <label class="f" for="eDesc">Short description (shown in the menu)</label>
+      <input class="in" id="eDesc" maxlength="80" placeholder="Download Instagram reels">
+
+      <div id="textBox" class="hide">
+        <label class="f" for="eReply">Reply text</label>
+        <textarea class="in" id="eReply" placeholder="Hello {{name}}!"></textarea>
+        <p class="help">You can use <code>{{name}}</code> (sender name), <code>{{sender}}</code> (number), <code>{{q}}</code> (text after the command).</p>
+      </div>
+
+      <div id="apiBox">
+        <label class="f" for="ePaste">Paste an API link from the provider's playground (optional)</label>
+        <div class="linkrow"><input class="in" id="ePaste" placeholder="https://api.chamindu.site/api/v1/…?url=…&api_key=…"><button class="btn mini" onclick="importUrl()">Convert</button></div>
+        <p class="help">It turns the link into a template: your key becomes <code>{{key:CHAMA}}</code> and the sample input becomes <code>{{q}}</code>.</p>
+
+        <details style="margin-top:16px"><summary class="help" style="cursor:pointer;margin:0">Step 1 · look something up first (optional)</summary>
+          <p class="help">For services that need two calls (e.g. search first, then fetch details). Step 1 runs first; use its answer in the API address below as <code>{{s1.data.0.slug}}</code>.</p>
+          <label class="f" for="ePre">Step 1 address</label>
+          <textarea class="in" id="ePre" style="min-height:70px" placeholder="https://…/search?q={{q}}&api_key={{key:CHAMA}}"></textarea>
+        </details>
+        <label class="f" for="eUrl">API address</label>
+        <textarea class="in" id="eUrl" style="min-height:70px" placeholder="https://api.chamindu.site/api/v1/facebook?url={{q}}&api_key={{key:CHAMA}}"></textarea>
+        <p class="help"><code>{{q}}</code> everything typed after the command · <code>{{arg1}}</code> <code>{{arg2}}</code> single words · <code>{{arg2|480}}</code> with a default · <code>{{key:NAME}}</code> a saved key · <code>{{name}}</code> <code>{{sender}}</code></p>
+
+        <div class="row2">
+          <div><label class="f" for="eMethod">Method</label><select class="in" id="eMethod" onchange="syncForm()"><option>GET</option><option>POST</option></select></div>
+          <div><label class="f" for="eMedia">What should the bot send?</label><select class="in" id="eMedia" onchange="syncForm()"><option value="text">Text only</option><option value="image">Image</option><option value="video">Video</option><option value="audio">Audio (mp3)</option><option value="document">Document / file</option></select></div>
+        </div>
+
+        <div id="mediaBox" class="hide">
+          <label class="f" for="eMediaPath">Where is the file link in the answer? (leave empty = find it automatically)</label>
+          <input class="in" id="eMediaPath" placeholder="data.download_link | download_link">
+        </div>
+        <div id="docBox" class="hide row2">
+          <div><label class="f" for="eMime">File type</label><input class="in" id="eMime" placeholder="application/pdf"></div>
+          <div><label class="f" for="eFile">File name</label><input class="in" id="eFile" placeholder="file.pdf"></div>
+        </div>
+
+        <label class="f" for="eTpl">Message / caption (optional)</label>
+        <textarea class="in" id="eTpl" placeholder="🎵 {{data.title}}&#10;quality: {{data.quality}}"></textarea>
+        <p class="help">Use fields from the API answer like <code>{{data.title}}</code>. Run a test below and tap a field to add it.<br>For a list of results: <code>{{#each data.results limit=8}}{{n}}. {{title}} ({{year}})&#10;{{/each}}</code><br>If the API sends a picture/video/audio file straight back (no JSON), just pick Image / Video / Audio above — it is detected automatically.</p>
+
+        <div id="bodyBox" class="hide">
+          <label class="f" for="eBody">Request body (JSON)</label>
+          <textarea class="in" id="eBody" placeholder='{"text":"{{q}}"}'></textarea>
+        </div>
+        <details style="margin-top:14px"><summary class="help" style="cursor:pointer">Have a sample answer? Paste it to pick fields</summary>
+          <textarea class="in" id="eSample" style="min-height:90px" placeholder='{"status":true,"data":{"title":"…","download_link":"https://…"}}'></textarea>
+          <button class="btn ghost mini" style="margin-top:10px" onclick="readSample()">Read fields</button>
+          <div id="sampleOut"></div>
+        </details>
+        <details style="margin-top:14px"><summary class="help" style="cursor:pointer">Advanced</summary>
+          <label class="f" for="eHeaders">Headers (JSON)</label><textarea class="in" id="eHeaders" style="min-height:60px" placeholder='{"Authorization":"Bearer {{key:MYAPI}}"}'></textarea>
+          <label class="f" for="eSuccess">Success check (field that must be true)</label><input class="in" id="eSuccess" placeholder="status">
+          <label class="f" for="eError">Message when it fails</label><input class="in" id="eError" placeholder="Sorry, that did not work. Check the link and try again.">
+          <div class="row2">
+            <div><label class="f" for="eCool">Cooldown per user (seconds)</label><input class="in" id="eCool" type="number" min="0" max="3600" value="0"></div>
+            <div><label class="f" for="eTime">Wait for the API (seconds)</label><input class="in" id="eTime" type="number" min="5" max="120" value="60"></div>
+          </div>
+        </details>
+        <div class="switch" id="swInput" onclick="toggleSw('swInput')" style="margin-top:12px"><div class="t"><b>Needs input</b><span>Ask for a link/text when the user sends the command alone</span></div><i class="sw"></i></div>
+        <label class="f" for="eUsage">Usage hint</label><input class="in" id="eUsage" placeholder=".insta [reel link]">
+        <p class="help">Tip: users can also <b>reply to a message that contains the link</b> and send just the command.</p>
+      </div>
+
+      <div class="row2" style="margin-top:6px">
+        <button class="btn ghost" id="testBtn" onclick="runTest()">Test it</button>
+        <button class="btn" onclick="saveCmd()">Save command</button>
+      </div>
+      <div id="testIn" class="hide"><label class="f" for="tInput">Test input (what a user would type after the command)</label><input class="in" id="tInput" placeholder="https://www.instagram.com/reel/…"></div>
+      <div class="msg" id="eMsg"></div>
+      <div class="res" id="res"></div>
+    </div>
+  </section>
+
+  <section class="sec">
+    <div class="sec-h"><span class="no">03</span><h2>My commands</h2><span class="note">made here</span></div>
+    <div class="sheet"><i class="cm-a"></i><i class="cm-b"></i><div id="mine"></div>
+      <div class="row2" style="margin-top:6px"><button class="btn ghost" onclick="exportCmds()">Export all (backup)</button><button class="btn ghost" onclick="$('impBox').classList.toggle('hide')">Import</button></div>
+      <div id="impBox" class="hide"><label class="f" for="impText">Paste an exported file</label><textarea class="in" id="impText" placeholder='{"commands":{…}}'></textarea><button class="btn" onclick="doImport()">Import commands</button></div>
+      <div class="msg" id="impMsg"></div></div>
+  </section>
+
+  <section class="sec">
+    <div class="sec-h"><span class="no">04</span><h2>Built-in commands</h2><span class="note">switch off a broken one</span></div>
+    <div class="sheet"><i class="cm-a"></i><i class="cm-b"></i>
+      <input class="in" id="bSearch" placeholder="Search commands…" oninput="renderBuiltins()" style="margin-bottom:6px">
+      <p class="help">Switching a command off hides it from the menu. Then you can make your own command with the same name above and it takes over.</p>
+      <div id="builtins"></div>
+    </div>
+  </section>
+  <p class="foot">Crafted by <b>Nimah Dev</b></p>
+</main>
+
+<script>
+let adminToken = localStorage.getItem('nimah_admin_token') || '';
+if (!adminToken) location.href = '/admin';
+const $ = (id) => document.getElementById(id);
+const esc = (s) => { const d = document.createElement('div'); d.innerText = s == null ? '' : String(s); return d.innerHTML; };
+const attr = (s) => esc(s).replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+function af(url, opts) { opts = opts || {}; opts.headers = Object.assign({ 'x-admin-token': adminToken, 'Content-Type': 'application/json' }, opts.headers || {}); return fetch(url, opts).then(async (r) => { if (r.status === 401) { localStorage.removeItem('nimah_admin_token'); location.href = '/admin'; } return { ok: r.ok, status: r.status, d: await r.json().catch(() => ({})) }; }); }
+function setMsg(el, t, k) { el.className = 'msg' + (k ? ' ' + k : ''); el.innerText = t; }
+function toggleSw(id) { $(id).classList.toggle('on'); }
+const swOn = (id) => $(id).classList.contains('on');
+function logout() { af('/api/admin/logout', { method: 'POST' }); localStorage.removeItem('nimah_admin_token'); location.href = '/admin'; }
+let editingEnabled = true;
+
+/* ---------- API keys ---------- */
+async function loadKeys() {
+  const r = await af('/api/admin/api-keys');
+  $('keyList').innerHTML = (r.d.keys || []).map((k) => `<div class="item"><code>{{key:${esc(k.name)}}}</code><span class="meta">${esc(k.masked)}<small>${esc(k.source)}</small></span>${k.source === 'panel' ? `<button class="btn ghost sm mini danger" onclick="delKey('${attr(k.name)}')">Delete</button>` : ''}</div>`).join('') || '<div class="empty" style="margin-top:12px">No keys yet.</div>';
+}
+async function saveKey() {
+  const el = $('kMsg'); setMsg(el, 'Saving…');
+  const r = await af('/api/admin/api-keys', { method: 'POST', body: JSON.stringify({ name: $('kName').value, value: $('kVal').value }) });
+  if (!r.ok) return setMsg(el, r.d.error || 'Failed.', 'err');
+  setMsg(el, 'Saved ' + r.d.name, 'ok'); $('kVal').value = ''; loadKeys();
+}
+async function delKey(n) { if (!confirm('Delete key ' + n + '?')) return; await af('/api/admin/api-keys/' + encodeURIComponent(n), { method: 'DELETE' }); loadKeys(); }
+
+/* ---------- editor ---------- */
+function syncForm() {
+  const api = $('eType').value === 'api';
+  $('apiBox').classList.toggle('hide', !api); $('textBox').classList.toggle('hide', api);
+  $('testBtn').classList.toggle('hide', !api); $('testIn').classList.toggle('hide', !api);
+  const m = $('eMedia').value;
+  $('mediaBox').classList.toggle('hide', m === 'text'); $('docBox').classList.toggle('hide', m !== 'document');
+  $('bodyBox').classList.toggle('hide', $('eMethod').value !== 'POST');
+}
+const TEMPLATES = {
+  mp3: { name: 'ytaudio', type: 'api', desc: 'Download a YouTube song as MP3', url: 'https://api.chamindu.site/api/v1/music/sinhalahitsongs/download?url={{q}}&api_key={{key:CHAMA}}', mediaType: 'audio', mediaPath: 'data.download_link | download_link', textTemplate: '🎵 {{data.title}}\nquality: {{data.quality}}', needsInput: true, usage: '.ytaudio [youtube link]', successPath: 'status' },
+  mp4: { name: 'ytvideo', type: 'api', desc: 'Download a YouTube video', url: 'https://api.chamindu.site/api/v1/youtube/savetube/mp4?url={{arg1}}&quality={{arg2|480}}&api_key={{key:CHAMA}}', mediaType: 'video', mediaPath: 'data.download_url', textTemplate: '🎬 {{data.title}}\n{{data.format}} · {{data.duration}}', needsInput: true, usage: '.ytvideo [link] [quality]', successPath: 'status' },
+  fb: { name: 'fbvideo', type: 'api', desc: 'Download a Facebook video', url: 'https://api.chamindu.site/api/v1/facebook?url={{q}}&api_key={{key:CHAMA}}', mediaType: 'video', mediaPath: '', textTemplate: '{{data.title}}', needsInput: true, usage: '.fbvideo [video link]' },
+  dp: { name: 'numdp', type: 'api', desc: 'Profile photo of a WhatsApp number', url: 'https://api.chamindu.site/api/v1/media/whatsapp_dp/infodl?q={{q}}&api_key={{key:CHAMA}}', mediaType: 'image', mediaPath: 'data.image_url | data.dp_url | data.jpg_url | data.jpg_download_link', textTemplate: '📷 {{data.formatted_phone}}', needsInput: true, usage: '.numdp [number with country code]', errorText: 'No public profile photo was found for that number.' },
+  text: { name: 'rules', type: 'text', desc: 'Group rules', reply: 'Hello {{name}}!\n1. Be kind\n2. No spam' }
+};
+function fill(d) {
+  $('eName').value = d.name || ''; $('eType').value = d.type || 'api'; $('eDesc').value = d.desc || ''; $('eReply').value = d.reply || '';
+  $('eUrl').value = d.url || ''; $('eMethod').value = d.method || 'GET'; $('eMedia').value = d.mediaType || 'text'; $('eMediaPath').value = d.mediaPath || '';
+  $('eTpl').value = d.textTemplate || ''; $('eBody').value = d.body || ''; $('eHeaders').value = d.headers || ''; $('eSuccess').value = d.successPath || '';
+  $('eError').value = d.errorText || ''; $('eCool').value = d.cooldown || 0; $('eTime').value = d.timeout || 60; $('eMime').value = d.mimetype || ''; $('eFile').value = d.fileName || '';
+  $('eUsage').value = d.usage || ''; $('ePre').value = d.preUrl || ''; $('eAccess').value = d.access || 'all'; $('swInput').classList.toggle('on', !!d.needsInput); editingEnabled = d.enabled !== false; syncForm();
+}
+function applyTemplate() { const t = TEMPLATES[$('tpl').value]; if (t) { fill(t); $('editNote').innerText = 'from template'; } }
+function collect() {
+  return { name: $('eName').value.trim(), type: $('eType').value, desc: $('eDesc').value.trim(), reply: $('eReply').value, url: $('eUrl').value.trim(), method: $('eMethod').value, mediaType: $('eMedia').value,
+    mediaPath: $('eMediaPath').value.trim(), textTemplate: $('eTpl').value, body: $('eBody').value, headers: $('eHeaders').value, successPath: $('eSuccess').value.trim(), errorText: $('eError').value,
+    cooldown: $('eCool').value, timeout: $('eTime').value, mimetype: $('eMime').value, fileName: $('eFile').value, usage: $('eUsage').value, preUrl: $('ePre').value.trim(), access: $('eAccess').value, needsInput: swOn('swInput'), enabled: editingEnabled };
+}
+function importUrl() {
+  const el = $('eMsg'); let u;
+  try { u = new URL($('ePaste').value.trim()); } catch (e) { return setMsg(el, 'That is not a valid link.', 'err'); }
+  const keyRe = /^(api_?key|apikey|key|token|access_token)$/i, keyName = /chamindu/i.test(u.hostname) ? 'CHAMA' : 'API';
+  const others = []; u.searchParams.forEach((v, k) => { if (!keyRe.test(k)) others.push([k, v]); });
+  const parts = []; let i = 0;
+  u.searchParams.forEach((v, k) => {
+    if (keyRe.test(k)) parts.push(k + '={{key:' + keyName + '}}');
+    else { i++; if (others.length === 1) parts.push(k + '={{q}}'); else if (i === 1) parts.push(k + '={{arg1}}'); else parts.push(k + '={{arg' + i + '|' + v + '}}'); }
+  });
+  $('eUrl').value = u.origin + u.pathname + (parts.length ? '?' + parts.join('&') : '');
+  if (!$('eName').value) $('eName').value = (u.pathname.split('/').filter(Boolean).pop() || 'mycmd').toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 20);
+  $('eType').value = 'api'; $('swInput').classList.add('on'); syncForm();
+  setMsg(el, 'Converted. Make sure the key "' + keyName + '" is saved in section 01, then press Test.', 'ok');
+}
+function walkLeaves(o, base, out) {
+  if (out.length > 60) return out;
+  if (o !== null && typeof o === 'object') { const es = Array.isArray(o) ? o.slice(0, 15).map((v, i) => [String(i), v]) : Object.entries(o); for (const [k, v] of es) walkLeaves(v, base ? base + '.' + k : k, out); }
+  else if (o !== undefined && o !== null) out.push({ path: base, value: String(o).slice(0, 140), url: typeof o === 'string' && /^https?:\/\//i.test(o) });
+  return out;
+}
+function readSample() {
+  let j; try { j = JSON.parse($('eSample').value); } catch (e) { return $('sampleOut').innerHTML = '<p class="help" style="color:var(--red)">That is not valid JSON.</p>'; }
+  const f = walkLeaves(j, '', []);
+  const urls = f.filter((x) => x.url), rest = f.filter((x) => !x.url);
+  $('sampleOut').innerHTML = (urls.length ? `<p class="help">Links — tap to use as the file link:</p><div class="chips">${urls.map((u) => `<span class="chip chipbtn" title="${attr(u.value)}" onclick="$('eMediaPath').value='${attr(u.path)}';if($('eMedia').value==='text')$('eMedia').value='video';syncForm()">${esc(u.path)}</span>`).join('')}</div>` : '')
+    + (rest.length ? `<p class="help">Fields — tap to add to the message:</p><div class="chips">${rest.map((x) => `<span class="chip chipbtn" title="${attr(x.value)}" onclick="addField('${attr(x.path)}')">${esc(x.path)}</span>`).join('')}</div>` : '');
+}
+function addField(p) { const t = $('eTpl'); t.value += (t.value && !t.value.endsWith('\n') ? '\n' : '') + '{{' + p + '}}'; }
+function addS1(p) { const t = $('eUrl'); t.value += '{{s1.' + p + '}}'; }
+async function runTest() {
+  const box = $('res'), el = $('eMsg'); setMsg(el, 'Calling the API…'); box.style.display = 'none';
+  const c = collect(); const r = await af('/api/admin/custom-commands/test', { method: 'POST', body: JSON.stringify({ def: c, name: c.name, q: $('tInput').value }) });
+  setMsg(el, '');
+  const d = r.d || {}; box.style.display = 'block';
+  let h = `<div><b class="${d.ok ? 'ok' : 'bad'}">${d.ok ? 'WORKS' : 'PROBLEM'}</b> ${d.status ? '· HTTP ' + d.status : ''} ${d.ms ? '· ' + d.ms + ' ms' : ''}</div>`;
+  if (d.error) h += `<p class="help" style="color:var(--red)">${esc(d.error)}</p>`;
+  if (d.pre) h += `<p class="help"><b>Step 1</b> · HTTP ${d.pre.status} — tap a field to insert it into the API address as <code>{{s1.…}}</code>:</p><div class="chips">${(d.pre.fields || []).map((f) => `<span class="chip chipbtn" title="${attr(f.value)}" onclick="addS1('${attr(f.path)}')">${esc(f.path)}</span>`).join('')}</div><details><summary class="help" style="cursor:pointer">Step 1 raw answer</summary><pre class="raw">${esc(d.pre.raw)}</pre></details>`;
+  if (d.mediaUrl) h += `<p class="help">File found at <span class="pill">${esc(d.mediaPath || 'auto')}</span><br>${esc(d.mediaUrl)}</p>`;
+  if (d.text) h += `<p class="help">Message preview:</p><pre class="raw" style="max-height:140px;background:#fff;color:var(--ink);border:1px solid var(--line)">${esc(d.text)}</pre>`;
+  if ((d.urls || []).length) h += `<p class="help">Links in the answer — tap to use as the file link:</p><div class="chips">${d.urls.map((u) => `<span class="chip chipbtn" title="${attr(u.value)}" onclick="$('eMediaPath').value='${attr(u.path)}';if($('eMedia').value==='text')$('eMedia').value='video';syncForm()">${esc(u.path)}</span>`).join('')}</div>`;
+  if ((d.fields || []).length) h += `<p class="help">Fields in the answer — tap to add to the message:</p><div class="chips">${d.fields.map((f) => `<span class="chip chipbtn" title="${attr(f.value)}" onclick="addField('${attr(f.path)}')">${esc(f.path)}</span>`).join('')}</div>`;
+  if (d.raw) h += `<details><summary class="help" style="cursor:pointer">Raw answer</summary><pre class="raw">${esc(d.raw)}</pre></details>`;
+  box.innerHTML = h;
+}
+async function saveCmd() {
+  const el = $('eMsg'); setMsg(el, 'Saving…');
+  const r = await af('/api/admin/custom-commands', { method: 'POST', body: JSON.stringify(collect()) });
+  if (!r.ok) return setMsg(el, r.d.error || 'Could not save.', 'err');
+  setMsg(el, 'Saved .' + r.d.name + ' — it works in WhatsApp right now.', 'ok'); $('editNote').innerText = 'new command'; loadMine(); loadBuiltins();
+}
+
+/* ---------- my commands ---------- */
+let mineCache = [];
+async function loadMine() {
+  const r = await af('/api/admin/custom-commands'); mineCache = r.d.commands || [];
+  $('mine').innerHTML = mineCache.length ? mineCache.map((c) => {
+    const st = c.stats || {};
+    return `<div class="item"><code>.${esc(c.name)}</code>
+      <span class="meta">${esc(c.desc || (c.type === 'api' ? 'API command' : (c.reply || '').slice(0, 60)))}<small>${c.type === 'api' ? 'API · ' + esc(c.mediaType) : 'text'} · used ${st.uses || 0} · failed ${st.fails || 0}${c.enabled === false ? ' · OFF' : ''}</small>${st.lastError ? `<small class="err">last error: ${esc(st.lastError)}</small>` : ''}</span>
+      <button class="btn ghost sm mini" onclick="editCmd('${attr(c.name)}')">Edit</button>
+      <button class="btn ghost sm mini" onclick="dupCmd('${attr(c.name)}')">Copy</button>
+      <button class="btn ghost sm mini" onclick="toggleCmd('${attr(c.name)}',${c.enabled === false})">${c.enabled === false ? 'Turn on' : 'Turn off'}</button>
+      <button class="btn ghost sm mini danger" onclick="delCmd('${attr(c.name)}')">Delete</button></div>`;
+  }).join('') : '<div class="empty">Nothing yet. Make your first command above.</div>';
+}
+function editCmd(name) { const c = mineCache.find((x) => x.name === name); if (!c) return; $('tpl').value = ''; fill(Object.assign({ name }, c)); $('editNote').innerText = 'editing .' + name; window.scrollTo({ top: $('eName').getBoundingClientRect().top + scrollY - 120, behavior: 'smooth' }); }
+function dupCmd(name) { const c = mineCache.find((x) => x.name === name); if (!c) return; $('tpl').value = ''; fill(Object.assign({}, c, { name: name.slice(0, 22) + '2', enabled: true })); $('editNote').innerText = 'copy of .' + name; window.scrollTo({ top: $('eName').getBoundingClientRect().top + scrollY - 120, behavior: 'smooth' }); }
+async function exportCmds() {
+  const r = await fetch('/api/admin/studio-export', { headers: { 'x-admin-token': adminToken } }); if (!r.ok) return;
+  const b = await r.blob(), a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = 'nimah-commands.json'; a.click();
+}
+async function doImport() {
+  const el = $('impMsg'); let j; try { j = JSON.parse($('impText').value); } catch (e) { return setMsg(el, 'That is not valid JSON.', 'err'); }
+  const r = await af('/api/admin/studio-import', { method: 'POST', body: JSON.stringify({ commands: j.commands || j }) });
+  if (!r.ok) return setMsg(el, r.d.error || 'Import failed.', 'err');
+  setMsg(el, `Imported ${r.d.added} command(s)` + (r.d.skipped.length ? ` · skipped: ${r.d.skipped.join(', ')}` : ''), 'ok'); $('impText').value = ''; loadMine();
+}
+async function toggleCmd(n, on) { await af('/api/admin/custom-commands/' + encodeURIComponent(n) + '/toggle', { method: 'POST', body: JSON.stringify({ enabled: on }) }); loadMine(); }
+async function delCmd(n) { if (!confirm('Delete .' + n + '?')) return; await af('/api/admin/custom-commands/' + encodeURIComponent(n), { method: 'DELETE' }); loadMine(); loadBuiltins(); }
+
+/* ---------- built-ins ---------- */
+let builtins = [];
+async function loadBuiltins() { const r = await af('/api/admin/builtin-commands'); builtins = r.d.commands || []; renderBuiltins(); }
+function renderBuiltins() {
+  const q = $('bSearch').value.trim().toLowerCase();
+  const list = builtins.filter((c) => !q || c.name.includes(q) || c.category.toLowerCase().includes(q) || c.desc.toLowerCase().includes(q)).slice(0, 80);
+  $('builtins').innerHTML = list.map((c) => `<div class="switch ${c.disabled ? '' : 'on'}" onclick="toggleBuiltin('${attr(c.name)}',${!c.disabled})"><div class="t"><b>.${esc(c.name)}</b><span>${esc(c.category)} · ${esc(c.desc).slice(0, 60)}</span></div><i class="sw"></i></div>`).join('') || '<div class="empty">No match.</div>';
+}
+async function toggleBuiltin(name, disable) {
+  const r = await af('/api/admin/builtin-commands/' + encodeURIComponent(name), { method: 'POST', body: JSON.stringify({ disabled: disable }) });
+  if (!r.ok) alert(r.d.error || 'Failed.'); loadBuiltins();
+}
+
+syncForm(); loadKeys(); loadMine(); loadBuiltins();
+</script>
+</body>
+</html>
