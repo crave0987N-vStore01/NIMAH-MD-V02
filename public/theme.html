@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<!-- NIMAH MD — © 2026 Nimah Dev. All Rights Reserved. -->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f1eee8">
+<title>NIMAH MD — Theme</title>
+<link rel="icon" href="/logo.jpg">
+<link rel="stylesheet" href="/nimah.css">
+<link rel="stylesheet" href="/theme.css" id="themeLink">
+<style>
+  .split{display:grid;gap:20px}@media(min-width:900px){.split{grid-template-columns:1fr 400px;align-items:start}.pv{position:sticky;top:16px}}
+  .row2{display:grid;gap:14px}@media(min-width:560px){.row2{grid-template-columns:1fr 1fr}}
+  .cols{display:grid;grid-template-columns:repeat(2,1fr);gap:12px 16px}
+  .col{display:flex;align-items:center;gap:10px;font:500 11px var(--mono);letter-spacing:.08em;color:var(--mute)}
+  .col input[type=color]{width:44px;height:34px;border:1.5px solid var(--ink);padding:0;background:none;cursor:pointer;flex:none}
+  .col span{flex:1}.col code{font-family:var(--mono);color:var(--ink)}
+  .rng{display:flex;align-items:center;gap:10px;margin-top:6px}.rng input{flex:1;accent-color:var(--red)}.rng b{font:500 12px var(--mono);min-width:44px;text-align:right}
+  .pv iframe{width:100%;height:640px;border:1.5px solid var(--ink);background:var(--paper);display:block}
+  .presets{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
+  .pre{display:flex;align-items:center;gap:8px;border:1.5px solid var(--ink);background:#fff;padding:6px 10px;font:500 11px var(--mono);cursor:pointer}
+  .pre i{width:14px;height:14px;display:block;border:1px solid rgba(0,0,0,.4)}
+  .btnrow{display:flex;gap:10px;flex-wrap:wrap}.btnrow .btn{width:auto;flex:1;min-width:140px}
+</style>
+</head>
+<body>
+<div class="bg"></div><div class="grain"></div>
+<main class="shell wide">
+  <div class="topbar">
+    <div class="brandmark">Nimah <b>MD</b> <span class="stamp" style="margin-left:10px">theme</span></div>
+    <div style="display:flex;gap:8px"><a class="btn ghost sm" style="margin:0;text-decoration:none" href="/brand">Brand</a><a class="btn ghost sm" style="margin:0;text-decoration:none" href="/studio">Studio</a><a class="btn ghost sm" style="margin:0;text-decoration:none" href="/admin">Admin</a><button class="btn ghost sm" style="margin:0" onclick="logout()">Sign out</button></div>
+  </div>
+  <p class="lede" style="max-width:none">Change the pair site's colours, fonts and text here. Save once — the pair page, settings panel, admin, brand and studio all change together.</p>
+
+  <div class="split">
+  <div>
+    <section class="sec">
+      <div class="sec-h"><span class="no">01</span><h2>Colours</h2><span class="note">whole site</span></div>
+      <div class="sheet"><i class="cm-a"></i><i class="cm-b"></i>
+        <div class="kicker">Quick presets</div><div class="presets" id="presets"></div>
+        <hr class="rule">
+        <div class="cols" id="colBox"></div>
+      </div>
+    </section>
+
+    <section class="sec">
+      <div class="sec-h"><span class="no">02</span><h2>Fonts</h2><span class="note">Google Fonts</span></div>
+      <div class="sheet"><i class="cm-a"></i><i class="cm-b"></i>
+        <div class="row2">
+          <div><label class="f" style="margin-top:0" for="fDisplay">Headline font</label><select class="in" id="fDisplay"></select></div>
+          <div><label class="f" style="margin-top:0" for="fBody">Body font</label><select class="in" id="fBody"></select></div>
+        </div>
+        <label class="f" for="fMono">Labels / code font</label><select class="in" id="fMono"></select>
+        <label class="f">Headline size</label><div class="rng"><input type="range" id="scale" min="70" max="140" step="5"><b id="scaleV"></b></div>
+      </div>
+    </section>
+
+    <section class="sec">
+      <div class="sec-h"><span class="no">03</span><h2>Style</h2><span class="note">shape &amp; effects</span></div>
+      <div class="sheet"><i class="cm-a"></i><i class="cm-b"></i>
+        <label class="f" style="margin-top:0">Corner roundness</label><div class="rng"><input type="range" id="radius" min="0" max="28" step="1"><b id="radiusV"></b></div>
+        <label class="f">Shadow depth</label><div class="rng"><input type="range" id="shadow" min="0" max="14" step="1"><b id="shadowV"></b></div>
+        <label class="f">Panel opacity</label><div class="rng"><input type="range" id="sheetOpacity" min="40" max="100" step="5"><b id="sheetOpacityV"></b></div>
+        <div class="switch on" id="swGrain" onclick="tog('swGrain')" style="margin-top:14px"><div class="t"><b>Film grain</b><span>Moving paper texture</span></div><i class="sw"></i></div>
+        <div class="switch on" id="swDust" onclick="tog('swDust')"><div class="t"><b>Falling leaves</b><span>Animated particles on the pair page</span></div><i class="sw"></i></div>
+        <div class="switch on" id="swTicker" onclick="tog('swTicker')"><div class="t"><b>Ticker strip</b><span>Scrolling words under the headline</span></div><i class="sw"></i></div>
+        <div class="switch on" id="swBg" onclick="tog('swBg')"><div class="t"><b>Background photo</b><span>Off = plain paper colour</span></div><i class="sw"></i></div>
+      </div>
+    </section>
+
+    <section class="sec">
+      <div class="sec-h"><span class="no">04</span><h2>Pair page text</h2><span class="note">words on the page</span></div>
+      <div class="sheet"><i class="cm-a"></i><i class="cm-b"></i>
+        <label class="f" style="margin-top:0" for="pairTitle">Browser tab title</label><input class="in" id="pairTitle" maxlength="80">
+        <div class="row2">
+          <div><label class="f" for="pairLine1">Headline — start</label><input class="in" id="pairLine1" maxlength="80"></div>
+          <div><label class="f" for="pairAccent">Headline — highlighted word</label><input class="in" id="pairAccent" maxlength="80"></div>
+        </div>
+        <label class="f" for="pairLine2">Headline — second line</label><input class="in" id="pairLine2" maxlength="80">
+        <label class="f" for="pairLede">Sub text</label><textarea class="in" id="pairLede" maxlength="200"></textarea>
+        <label class="f" for="tickerWords">Ticker words (comma separated)</label><input class="in" id="tickerWords" maxlength="80">
+        <div class="row2">
+          <div><label class="f" for="tabQr">Tab 1 name</label><input class="in" id="tabQr" maxlength="40"></div>
+          <div><label class="f" for="tabCode">Tab 2 name</label><input class="in" id="tabCode" maxlength="40"></div>
+        </div>
+        <div class="row2">
+          <div><label class="f" for="stat1Num">Stat 1 — number</label><input class="in" id="stat1Num" maxlength="20"></div>
+          <div><label class="f" for="stat1Label">Stat 1 — label</label><input class="in" id="stat1Label" maxlength="30"></div>
+          <div><label class="f" for="stat2Label">Stat 2 — label (live count)</label><input class="in" id="stat2Label" maxlength="30"></div>
+          <div><label class="f" for="stat3Num">Stat 3 — number</label><input class="in" id="stat3Num" maxlength="20"></div>
+          <div><label class="f" for="stat3Label">Stat 3 — label</label><input class="in" id="stat3Label" maxlength="30"></div>
+        </div>
+      </div>
+    </section>
+
+    <div class="btnrow"><button class="btn" onclick="save()">Save &amp; apply to all sites</button><button class="btn ghost" onclick="resetAll()">Reset to default</button></div>
+    <div class="msg" id="msg"></div>
+  </div>
+
+  <aside class="pv">
+    <div class="kicker" style="margin-bottom:8px">Live preview · pair site</div>
+    <iframe id="pv" src="/?themepreview=1" title="Pair site preview"></iframe>
+  </aside>
+  </div>
+  <p class="foot">Crafted by <b>Nimah Dev</b></p>
+</main>
+
+<script>
+let adminToken = localStorage.getItem('nimah_admin_token') || '';
+if (!adminToken) location.href = '/admin';
+const $ = (id) => document.getElementById(id);
+function af(url, opts) { opts = opts || {}; opts.headers = Object.assign({ 'x-admin-token': adminToken, 'Content-Type': 'application/json' }, opts.headers || {}); return fetch(url, opts).then(async (r) => { if (r.status === 401) { localStorage.removeItem('nimah_admin_token'); location.href = '/admin'; } return { ok: r.ok, d: await r.json().catch(() => ({})) }; }); }
+function setMsg(t, k) { const m = $('msg'); m.className = 'msg' + (k ? ' ' + k : ''); m.innerText = t; }
+function logout() { af('/api/admin/logout', { method: 'POST' }); localStorage.removeItem('nimah_admin_token'); location.href = '/admin'; }
+function tog(id) { $(id).classList.toggle('on'); live(); }
+const on = (id) => $(id).classList.contains('on');
+
+const COLORS = [['cInk', 'Text / lines'], ['cPaper', 'Background'], ['cAccent', 'Accent'], ['cAccentDark', 'Accent dark'], ['cMute', 'Soft text'], ['cGreen', 'Online green']];
+const TEXTS = ['pairTitle', 'pairLine1', 'pairAccent', 'pairLine2', 'pairLede', 'tickerWords', 'tabQr', 'tabCode', 'stat1Num', 'stat1Label', 'stat2Label', 'stat3Num', 'stat3Label'];
+const RANGES = ['scale', 'radius', 'shadow', 'sheetOpacity'], UNIT = { scale: '%', radius: 'px', shadow: 'px', sheetOpacity: '%' };
+const PRESETS = {
+  'Ember (default)': { cInk: '#0e0d0d', cPaper: '#f1eee8', cAccent: '#b3121c', cAccentDark: '#7d0c13', cMute: '#5a554f', cGreen: '#2f7a3b' },
+  'Ocean': { cInk: '#0b1c2c', cPaper: '#eaf2f7', cAccent: '#0b6fb8', cAccentDark: '#084a7a', cMute: '#4a5d6c', cGreen: '#1f8a5b' },
+  'Forest': { cInk: '#10200f', cPaper: '#eef2e6', cAccent: '#2f7a3b', cAccentDark: '#1d4f26', cMute: '#4f5b49', cGreen: '#2f7a3b' },
+  'Violet': { cInk: '#1a1030', cPaper: '#f3eefa', cAccent: '#7a2fd0', cAccentDark: '#531e92', cMute: '#5d5470', cGreen: '#2f7a5b' },
+  'Rose': { cInk: '#2a0f1a', cPaper: '#fbeff2', cAccent: '#d6336c', cAccentDark: '#9c1f4c', cMute: '#6b4f5a', cGreen: '#2f7a3b' },
+  'Gold': { cInk: '#1c1608', cPaper: '#f7f1de', cAccent: '#b8860b', cAccentDark: '#7a5a07', cMute: '#5e5640', cGreen: '#2f7a3b' },
+  'Midnight': { cInk: '#f1eee8', cPaper: '#14161c', cAccent: '#ff4d5a', cAccentDark: '#c22a36', cMute: '#a3a09a', cGreen: '#3ecf6e' }
+};
+$('colBox').innerHTML = COLORS.map(([k, n]) => `<label class="col"><input type="color" id="${k}" oninput="$('${k}V').innerText=this.value;live()"><span>${n}<br><code id="${k}V"></code></span></label>`).join('');
+$('presets').innerHTML = Object.entries(PRESETS).map(([n, p]) => `<span class="pre" onclick="preset('${n}')"><i style="background:${p.cPaper}"></i><i style="background:${p.cAccent}"></i><i style="background:${p.cInk}"></i>${n}</span>`).join('');
+function preset(n) { Object.entries(PRESETS[n]).forEach(([k, v]) => { $(k).value = v; $(k + 'V').innerText = v; }); live(); }
+
+function collect() {
+  const o = { grain: on('swGrain'), dust: on('swDust'), ticker: on('swTicker'), bgImage: on('swBg'), fDisplay: $('fDisplay').value, fBody: $('fBody').value, fMono: $('fMono').value };
+  COLORS.forEach(([k]) => o[k] = $(k).value); TEXTS.forEach((k) => o[k] = $(k).value); RANGES.forEach((k) => o[k] = Number($(k).value));
+  return o;
+}
+function fill(t) {
+  COLORS.forEach(([k]) => { $(k).value = t[k]; $(k + 'V').innerText = t[k]; }); TEXTS.forEach((k) => $(k).value = t[k] == null ? '' : t[k]);
+  RANGES.forEach((k) => { $(k).value = t[k]; $(k + 'V').innerText = t[k] + UNIT[k]; });
+  ['fDisplay', 'fBody', 'fMono'].forEach((k) => $(k).value = t[k]);
+  $('swGrain').classList.toggle('on', t.grain); $('swDust').classList.toggle('on', t.dust); $('swTicker').classList.toggle('on', t.ticker); $('swBg').classList.toggle('on', t.bgImage);
+}
+let tm = null;
+function live() { clearTimeout(tm); tm = setTimeout(pushPreview, 200); }
+async function pushPreview() {
+  const r = await af('/api/admin/theme/preview', { method: 'POST', body: JSON.stringify(collect()) }); if (!r.ok) return;
+  const f = $('pv'), doc = f.contentDocument; if (!doc || !doc.head) return;
+  let st = doc.getElementById('liveTheme'); if (!st) { st = doc.createElement('style'); st.id = 'liveTheme'; doc.head.appendChild(st); }
+  st.textContent = r.d.css;
+  if (f.contentWindow.applyThemeText) f.contentWindow.applyThemeText(r.d.theme);
+}
+$('pv').addEventListener('load', pushPreview);
+RANGES.forEach((k) => $(k).addEventListener('input', () => { $(k + 'V').innerText = $(k).value + UNIT[k]; live(); }));
+TEXTS.concat(['fDisplay', 'fBody', 'fMono']).forEach((k) => $(k).addEventListener('input', live));
+
+async function save() {
+  setMsg('Saving…');
+  const r = await af('/api/admin/theme', { method: 'POST', body: JSON.stringify(collect()) });
+  if (!r.ok) return setMsg(r.d.error || 'Could not save.', 'err');
+  fill(r.d.theme); $('themeLink').href = '/theme.css?t=' + Date.now();
+  setMsg('Saved — pair page, settings, admin, brand and studio now use this look.', 'ok');
+}
+async function resetAll() {
+  if (!confirm('Go back to the default look?')) return;
+  const r = await af('/api/admin/theme/reset', { method: 'POST' }); if (!r.ok) return setMsg('Could not reset.', 'err');
+  fill(r.d.theme); $('themeLink').href = '/theme.css?t=' + Date.now(); pushPreview(); setMsg('Default look restored.', 'ok');
+}
+(async () => {
+  const r = await af('/api/admin/theme'); const fonts = r.d.fonts || {};
+  ['fDisplay', 'fBody', 'fMono'].forEach((id) => { $(id).innerHTML = Object.keys(fonts).map((n) => `<option value="${n}">${n}</option>`).join(''); });
+  fill(r.d.theme);
+})();
+</script>
+</body>
+</html>

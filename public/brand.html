@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<!-- NIMAH MD — © 2026 Nimah Dev. All Rights Reserved. -->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f1eee8">
+<title>NIMAH MD — Brand &amp; Messages</title>
+<link rel="icon" href="/logo.jpg">
+<link rel="stylesheet" href="/nimah.css">
+<link rel="stylesheet" href="/theme.css">
+<style>
+  .row2{display:grid;gap:14px}@media(min-width:640px){.row2{grid-template-columns:1fr 1fr}}
+  .help{font:400 11.5px/1.6 var(--mono);color:var(--mute);margin-top:8px}
+  .help code{font-family:var(--mono);background:rgba(14,13,13,.07);padding:1px 6px}
+  .bubble{background:#fff;border:1px solid var(--line);border-left:4px solid var(--red);padding:12px 14px;margin-top:12px;font:400 13px/1.55 var(--sans);white-space:pre-wrap;word-break:break-word;display:none}
+  .mini{width:auto;margin:0;padding:8px 12px;font-size:10.5px;box-shadow:3px 3px 0 var(--red)}
+  .mini.ghost{box-shadow:none}
+  .chipbtn{cursor:pointer}
+  .logoBox{display:flex;gap:16px;align-items:center;flex-wrap:wrap}
+  .logoBox img{width:160px;max-width:100%;border:1.5px solid var(--ink);display:block}
+  audio{width:100%;margin-top:6px}
+  .hide{display:none}
+  .btnrow{display:flex;gap:10px;flex-wrap:wrap}.btnrow .btn{width:auto;flex:1;min-width:140px}
+</style>
+</head>
+<body>
+<div class="bg"></div><div class="grain"></div>
+<main class="shell wide">
+  <div class="topbar">
+    <div class="brandmark">Nimah <b>MD</b> <span class="stamp" style="margin-left:10px">brand</span></div>
+    <div style="display:flex;gap:8px"><a class="btn ghost sm" style="margin:0;text-decoration:none" href="/theme">Theme</a><a class="btn ghost sm" style="margin:0;text-decoration:none" href="/studio">Studio</a><a class="btn ghost sm" style="margin:0;text-decoration:none" href="/admin">Admin</a><button class="btn ghost sm" style="margin:0" onclick="logout()">Sign out</button></div>
+  </div>
+  <p class="lede" style="max-width:none">Change your bot's name, how .menu / .alive / .ping look, the logo and the welcome voice. Everything applies instantly to every paired bot.</p>
+
+  <section class="sec">
+    <div class="sec-h"><span class="no">01</span><h2>Identity</h2><span class="note">names &amp; text</span></div>
+    <div class="sheet"><i class="cm-a"></i><i class="cm-b"></i>
+      <div class="row2">
+        <div><label class="f" style="margin-top:0" for="botName">Bot name</label><input class="in" id="botName" maxlength="30" placeholder="NIMAH MD"></div>
+        <div><label class="f" style="margin-top:0" for="ownerName">Developer / owner name</label><input class="in" id="ownerName" maxlength="30" placeholder="Nimah Dev"></div>
+      </div>
+      <div class="row2">
+        <div><label class="f" for="tagline">Tagline (shown in the menu header)</label><input class="in" id="tagline" maxlength="40" placeholder="private agent"></div>
+        <div><label class="f" for="description">Description (shown on the link card)</label><input class="in" id="description" maxlength="80" placeholder="Private AI Agent · online 24/7"></div>
+      </div>
+      <label class="f" for="footer">Footer line (empty = default). Used at the bottom of every message.</label>
+      <input class="in" id="footer" maxlength="160" placeholder="{{bot}} · by {{owner}} · v{{version}}">
+      <div class="switch on" id="swBanner" onclick="tog('swBanner')" style="margin-top:12px"><div class="t"><b>Logo banner</b><span>Send the logo picture with .menu, .alive and .ping</span></div><i class="sw"></i></div>
+      <div class="switch on" id="swPing" onclick="tog('swPing')"><div class="t"><b>Welcome voice on .ping</b><span>Play the voice after the ping message</span></div><i class="sw"></i></div>
+      <div class="switch on" id="swAlive" onclick="tog('swAlive')"><div class="t"><b>Welcome voice on .alive</b><span>Play the voice after the alive message</span></div><i class="sw"></i></div>
+    </div>
+  </section>
+
+  <section class="sec">
+    <div class="sec-h"><span class="no">02</span><h2>Messages</h2><span class="note">your own layout</span></div>
+    <div class="sheet"><i class="cm-a"></i><i class="cm-b"></i>
+      <p class="help" style="margin-top:0">Tap a word to add it where your cursor is. Leave a box empty to keep the built-in design. Use <code>*bold*</code> and <code>_italic_</code> like in WhatsApp. <code>{{user|Friend}}</code> shows a fallback.</p>
+      <div class="chips" id="phChips"></div>
+
+      <label class="f" for="menuIntro">.menu — top part of the menu <span style="color:var(--dim)">(the numbered index is always added below)</span></label>
+      <select class="in" id="stMenu" onchange="starter('menu')"><option value="">Starter styles…</option></select>
+      <textarea class="in" id="menuIntro" onfocus="lastTa=this" placeholder="Empty = built-in design"></textarea>
+      <div class="btnrow"><button class="btn ghost" onclick="preview('menu')">Preview menu</button></div>
+      <div class="bubble" id="pvmenu"></div>
+
+      <label class="f" for="aliveTemplate">.alive message</label>
+      <select class="in" id="stAlive" onchange="starter('alive')"><option value="">Starter styles…</option></select>
+      <textarea class="in" id="aliveTemplate" onfocus="lastTa=this" placeholder="Empty = built-in design"></textarea>
+      <div class="btnrow"><button class="btn ghost" onclick="preview('alive')">Preview alive</button></div>
+      <div class="bubble" id="pvalive"></div>
+
+      <label class="f" for="pingTemplate">.ping message <span style="color:var(--dim)">(also {{ping}} {{signal}} {{meter}})</span></label>
+      <select class="in" id="stPing" onchange="starter('ping')"><option value="">Starter styles…</option></select>
+      <textarea class="in" id="pingTemplate" onfocus="lastTa=this" placeholder="Empty = built-in design"></textarea>
+      <div class="btnrow"><button class="btn ghost" onclick="preview('ping')">Preview ping</button></div>
+      <div class="bubble" id="pvping"></div>
+
+      <button class="btn" onclick="saveAll()">Save everything</button>
+      <div class="msg" id="saveMsg"></div>
+    </div>
+  </section>
+
+  <section class="sec">
+    <div class="sec-h"><span class="no">03</span><h2>AI chat</h2><span class="note">Sinhala · Singlish · English</span></div>
+    <div class="sheet"><i class="cm-a"></i><i class="cm-b"></i>
+      <div class="row2">
+        <div><label class="f" style="margin-top:0" for="aiModel">AI model (empty = automatic)</label><input class="in" id="aiModel" list="aiModels" placeholder="google/gemini-2.5-flash-lite"><datalist id="aiModels"><option value="google/gemini-2.5-flash-lite"><option value="google/gemini-3.8-flash"><option value="deepseek/deepseek-chat"><option value="openai/gpt-4o-mini"></datalist></div>
+        <div><label class="f" style="margin-top:0" for="aiLang">Reply language</label><select class="in" id="aiLang"><option value="auto">Automatic (same as the user)</option><option value="si">Always Sinhala (සිංහල)</option><option value="singlish">Always Singlish</option><option value="en">Always English</option></select></div>
+      </div>
+      <div class="row2">
+        <div><label class="f" for="aiTemp">Creativity (0 = careful, 1 = playful)</label><input class="in" id="aiTemp" type="number" min="0" max="1" step="0.1" value="0.7"></div>
+        <div><div class="switch on" id="swAiMark" onclick="tog('swAiMark')" style="margin-top:28px"><div class="t"><b>Signature line</b><span>Add a small bot name line under AI replies</span></div><i class="sw"></i></div></div>
+      </div>
+      <label class="f" for="aiPersona">Extra instructions for the AI (optional)</label>
+      <textarea class="in" id="aiPersona" maxlength="600" placeholder="e.g. Always call the user 'ඔයා'. Our shop sells mobile phones in Colombo; help customers politely."></textarea>
+      <p class="help">Tip: Gemini models understand Sinhala very well. If a model is busy the bot automatically tries a backup model. Remember to press <b>Save everything</b> above after changing these.</p>
+      <label class="f" for="aiTry">Try it (uses the settings above)</label>
+      <input class="in" id="aiTry" placeholder="kohomada machan, mata podi udaw ekak one">
+      <div class="btnrow"><button class="btn ghost" onclick="tryAi()">Send test message</button></div>
+      <div class="bubble" id="aiOut"></div>
+    </div>
+  </section>
+
+  <div class="grid2">
+    <section class="sec">
+      <div class="sec-h"><span class="no">04</span><h2>Logo</h2><span class="note">menu · alive · ping</span></div>
+      <div class="sheet"><i class="cm-a"></i><i class="cm-b"></i>
+        <div class="logoBox"><img id="logoImg" alt="current logo" src="/logo.jpg"><div class="help" style="margin:0" id="logoInfo"></div></div>
+        <label class="f" for="logoFile">Upload a new logo (JPG, PNG or WebP)</label>
+        <input class="in" type="file" id="logoFile" accept="image/*">
+        <div class="btnrow"><button class="btn" onclick="uploadLogo()">Upload logo</button><button class="btn ghost" onclick="resetAsset('logo')">Use default</button></div>
+        <div class="msg" id="logoMsg"></div>
+      </div>
+    </section>
+    <section class="sec">
+      <div class="sec-h"><span class="no">05</span><h2>Welcome voice</h2><span class="note">.ping · .alive</span></div>
+      <div class="sheet"><i class="cm-a"></i><i class="cm-b"></i>
+        <audio id="voiceAudio" controls></audio>
+        <div class="help" id="voiceInfo"></div>
+        <label class="f" for="voiceFile">Upload a new voice (MP3, M4A, OGG, WAV — up to about 2 MB)</label>
+        <input class="in" type="file" id="voiceFile" accept="audio/*">
+        <div class="btnrow"><button class="btn" onclick="uploadVoice()">Upload voice</button><button class="btn ghost" onclick="resetAsset('voice')">Use default</button></div>
+        <div class="msg" id="voiceMsg"></div>
+      </div>
+    </section>
+  </div>
+  <p class="foot">Crafted by <b>Nimah Dev</b></p>
+</main>
+
+<script>
+let adminToken = localStorage.getItem('nimah_admin_token') || '';
+if (!adminToken) location.href = '/admin';
+const $ = (id) => document.getElementById(id);
+const esc = (s) => { const d = document.createElement('div'); d.innerText = s == null ? '' : String(s); return d.innerHTML; };
+function af(url, opts) { opts = opts || {}; opts.headers = Object.assign({ 'x-admin-token': adminToken, 'Content-Type': 'application/json' }, opts.headers || {}); return fetch(url, opts).then(async (r) => { if (r.status === 401) { localStorage.removeItem('nimah_admin_token'); location.href = '/admin'; } return { ok: r.ok, status: r.status, d: await r.json().catch(() => ({})) }; }); }
+function setMsg(el, t, k) { el.className = 'msg' + (k ? ' ' + k : ''); el.innerText = t; }
+function tog(id) { $(id).classList.toggle('on'); }
+const on = (id) => $(id).classList.contains('on');
+function logout() { af('/api/admin/logout', { method: 'POST' }); localStorage.removeItem('nimah_admin_token'); location.href = '/admin'; }
+let lastTa = null;
+
+const PH = ['bot', 'owner', 'user', 'greeting', 'time', 'date', 'uptime', 'memory', 'commands', 'version', 'platform', 'bots', 'status', 'tagline', 'description', 'header', 'footer', 'ping', 'signal', 'meter'];
+$('phChips').innerHTML = PH.map((p) => `<span class="chip chipbtn" onclick="insertPh('${p}')">{{${p}}}</span>`).join('');
+function insertPh(p) {
+  const t = lastTa || $('menuIntro'), a = t.selectionStart || t.value.length, b = t.selectionEnd || t.value.length, ins = '{{' + p + '}}';
+  t.value = t.value.slice(0, a) + ins + t.value.slice(b); t.focus(); t.selectionStart = t.selectionEnd = a + ins.length;
+}
+const STARTERS = {
+  menu: { 'Friendly': '{{greeting}}, *{{user}}* 👋\n\n🤖 {{bot}} · {{description}}\n🕒 {{time}}   📅 {{date}}\n⚡ Up {{uptime}}   📦 {{commands}} commands', 'Minimal': '*{{bot}}*\nHi {{user}} — {{commands}} commands ready.', 'Boxed': '╭──❮ {{bot}} ❯──╮\n│ 👤 {{user}}\n│ ⏱ {{uptime}}\n│ 🧠 {{memory}}\n│ 📦 {{commands}} commands\n╰───────────────╯' },
+  alive: { 'Friendly': '{{header}}\n{{greeting}}, *{{user}}* 💚\n\n🟢 {{bot}} is online\n⏱ Uptime: {{uptime}}\n🧠 Memory: {{memory}}\n📦 Commands: {{commands}}\n\nType *.menu* to begin.\n\n{{footer}}', 'Minimal': '✅ *{{bot}}* is alive · up {{uptime}}', 'Boxed': '╭──❮ {{bot}} ❯──╮\n│ {{greeting}}, {{user}}\n│ status: online\n│ uptime: {{uptime}}\n│ ram: {{memory}}\n╰───────────────╯\n{{footer}}' },
+  ping: { 'Simple': '🏓 *Pong!*  {{ping}} ms · {{signal}}\n{{meter}}', 'Boxed': '╭──❮ PING ❯──╮\n│ ⚡ {{ping}} ms\n│ 📶 {{signal}}\n╰───────────╯\n{{meter}}', 'Minimal': '{{ping}} ms' }
+};
+for (const k of Object.keys(STARTERS)) { const sel = $('st' + k[0].toUpperCase() + k.slice(1)); Object.keys(STARTERS[k]).forEach((n) => { const o = document.createElement('option'); o.value = n; o.textContent = n; sel.appendChild(o); }); }
+function starter(kind) {
+  const sel = $('st' + kind[0].toUpperCase() + kind.slice(1)), tgt = $(kind === 'menu' ? 'menuIntro' : kind + 'Template');
+  if (sel.value && STARTERS[kind][sel.value]) tgt.value = STARTERS[kind][sel.value]; sel.value = '';
+}
+function collect() {
+  return { botName: $('botName').value, ownerName: $('ownerName').value, tagline: $('tagline').value, description: $('description').value, footer: $('footer').value,
+    menuIntro: $('menuIntro').value, aliveTemplate: $('aliveTemplate').value, pingTemplate: $('pingTemplate').value, banner: on('swBanner'), voiceOnPing: on('swPing'), voiceOnAlive: on('swAlive'),
+    aiModel: $('aiModel').value, aiLang: $('aiLang').value, aiTemp: $('aiTemp').value, aiPersona: $('aiPersona').value, aiWatermark: on('swAiMark') };
+}
+const wa = (t) => esc(t).replace(/\*([^*\n]+)\*/g, '<b>$1</b>').replace(/_([^_\n]+)_/g, '<i>$1</i>');
+async function preview(kind) {
+  const box = $('pv' + kind); box.style.display = 'block'; box.innerText = 'Rendering…';
+  const r = await af('/api/admin/branding/preview', { method: 'POST', body: JSON.stringify({ kind, brand: collect() }) });
+  if (!r.ok) { box.innerText = r.d.error || 'Could not render.'; return; }
+  box.innerHTML = wa(r.d.text);
+}
+async function tryAi() {
+  const box = $('aiOut'); box.style.display = 'block'; box.innerText = 'Thinking…';
+  const r = await af('/api/admin/ai-test', { method: 'POST', body: JSON.stringify({ text: $('aiTry').value, brand: collect() }) });
+  box.innerHTML = r.ok ? wa(r.d.answer) + '<div class="help">model: ' + esc(r.d.model) + ' · detected: ' + esc(r.d.lang) + '</div>' : esc(r.d.error || 'Failed.');
+}
+async function saveAll() {
+  const el = $('saveMsg'); setMsg(el, 'Saving…');
+  const r = await af('/api/admin/branding', { method: 'POST', body: JSON.stringify(collect()) });
+  if (!r.ok) return setMsg(el, r.d.error || 'Could not save.', 'err');
+  setMsg(el, 'Saved — send .menu, .alive or .ping in WhatsApp to see it.', 'ok');
+}
+function fillBrand(b) {
+  for (const k of ['botName', 'ownerName', 'tagline', 'description', 'footer', 'menuIntro', 'aliveTemplate', 'pingTemplate']) $(k).value = b[k] || '';
+  $('aiModel').value = b.aiModel || ''; $('aiLang').value = b.aiLang || 'auto'; $('aiTemp').value = b.aiTemp == null ? 0.7 : b.aiTemp; $('aiPersona').value = b.aiPersona || ''; $('swAiMark').classList.toggle('on', b.aiWatermark !== false);
+  $('swBanner').classList.toggle('on', b.banner !== false); $('swPing').classList.toggle('on', b.voiceOnPing !== false); $('swAlive').classList.toggle('on', b.voiceOnAlive !== false);
+}
+function readFile(inp, maxMb) {
+  return new Promise((res, rej) => {
+    const f = inp.files[0]; if (!f) return rej(new Error('Choose a file first.'));
+    if (f.size > maxMb * 1048576) return rej(new Error('That file is bigger than ' + maxMb + ' MB.'));
+    const fr = new FileReader(); fr.onload = () => res({ name: f.name, data: fr.result }); fr.onerror = () => rej(new Error('Could not read the file.')); fr.readAsDataURL(f);
+  });
+}
+async function uploadLogo() {
+  const el = $('logoMsg'); try { const f = await readFile($('logoFile'), 8); setMsg(el, 'Uploading…');
+    const r = await af('/api/admin/assets/logo', { method: 'POST', body: JSON.stringify(f) });
+    if (!r.ok) return setMsg(el, r.d.error || 'Failed.', 'err');
+    setMsg(el, 'New logo is live.', 'ok'); $('logoImg').src = '/logo.jpg?t=' + Date.now(); loadAssets();
+  } catch (e) { setMsg(el, e.message, 'err'); }
+}
+async function uploadVoice() {
+  const el = $('voiceMsg'); try { const f = await readFile($('voiceFile'), 3.5); setMsg(el, 'Uploading and converting…');
+    const r = await af('/api/admin/assets/voice', { method: 'POST', body: JSON.stringify(f) });
+    if (!r.ok) return setMsg(el, r.d.error || 'Failed.', 'err');
+    setMsg(el, r.d.converted ? 'New voice is live (sent as a voice note).' : 'New voice is live (sent as an audio file).', 'ok'); loadAssets();
+  } catch (e) { setMsg(el, e.message, 'err'); }
+}
+async function resetAsset(kind) {
+  if (!confirm('Go back to the default ' + (kind === 'logo' ? 'logo' : 'voice') + '?')) return;
+  await af('/api/admin/assets/' + kind, { method: 'DELETE' }); if (kind === 'logo') $('logoImg').src = '/logo.jpg?t=' + Date.now(); loadAssets();
+}
+async function loadAssets() {
+  const r = await af('/api/admin/branding'); const a = r.d.assets || {};
+  $('logoInfo').innerText = a.logo && a.logo.custom ? 'Custom logo in use.' : 'Default logo in use.';
+  $('voiceInfo').innerText = (a.voice && a.voice.custom ? 'Custom voice in use' : 'Default voice in use') + (a.voice ? ' · ' + (a.voice.ptt ? 'plays as a voice note' : 'plays as an audio file') + ' · ' + Math.round((a.voice.size || 0) / 1024) + ' KB' : '') + (a.ffmpeg ? '' : ' · converter not available on this server, so uploads are sent as audio files');
+  try { const v = await fetch('/api/admin/assets/voice-file', { headers: { 'x-admin-token': adminToken } }); if (v.ok) $('voiceAudio').src = URL.createObjectURL(await v.blob()); } catch (e) {}
+}
+(async () => { const r = await af('/api/admin/branding'); fillBrand(r.d.brand || {}); loadAssets(); })();
+</script>
+</body>
+</html>
