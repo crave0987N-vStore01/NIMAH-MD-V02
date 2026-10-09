@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<!-- NIMAH MD — © 2026 Nimah Dev. All Rights Reserved. -->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f1eee8">
+<title>NIMAH MD — Link your WhatsApp</title>
+<link rel="icon" href="/logo.jpg">
+<link rel="preload" as="image" href="/logo.jpg">
+<link rel="stylesheet" href="/nimah.css">
+</head>
+<body>
+<div class="bg"></div><div class="grain"></div><div class="dust" id="dust"></div>
+
+<main class="shell">
+  <header class="mast reveal">
+    <div class="plate"><img src="/logo.jpg" alt="NIMAH MD"></div>
+    <h1 class="display">Link your <em>WhatsApp<svg viewBox="0 0 200 10" preserveAspectRatio="none"><path d="M2 6 C 30 1, 55 9, 90 4 S 160 8, 198 3"/></svg></em><br>in one scan.</h1>
+    <p class="lede">A private multi-device bot. Pair once, and it answers for you around the clock.</p>
+  </header>
+
+  <div class="ticker-wrap reveal d1"><div class="ticker">
+    <span>Code</span><span class="sep">/</span><span>Build</span><span class="sep">/</span><span>Create</span><span class="sep">/</span><span>Grow</span><span class="sep">/</span>
+    <span>Code</span><span class="sep">/</span><span>Build</span><span class="sep">/</span><span>Create</span><span class="sep">/</span><span>Grow</span><span class="sep">/</span>
+  </div></div>
+
+  <section class="sheet reveal d2">
+    <i class="cm-a"></i><i class="cm-b"></i>
+    <div class="tabs">
+      <button class="tab active" id="tabQr" onclick="switchTab('qr')"><b>01</b>QR code</button>
+      <button class="tab" id="tabCode" onclick="switchTab('code')"><b>02</b>Pair code</button>
+    </div>
+
+    <div class="view active" id="viewQr">
+      <div class="qr">
+        <i class="br a"></i><i class="br b"></i><i class="br c"></i><i class="br d"></i>
+        <img id="qrImg" src="" alt="QR code">
+        <div class="wait" id="qrLoading">Preparing your code</div>
+        <div class="scan"></div>
+      </div>
+      <span class="hint" id="qrHint">refreshes automatically</span>
+      <ol class="steps">
+        <li><b>1</b><span>Open WhatsApp on your phone.</span></li>
+        <li><b>2</b><span>Settings, then Linked Devices.</span></li>
+        <li><b>3</b><span>Tap Link a Device and scan the square above.</span></li>
+      </ol>
+    </div>
+
+    <div class="view" id="viewCode">
+      <div class="kicker">Link with a phone number</div>
+      <label class="f" for="numInput">Your number, with country code</label>
+      <input class="in center" id="numInput" type="tel" inputmode="numeric" placeholder="947XXXXXXXX" autocomplete="off">
+      <button class="btn" id="codeBtn" onclick="getPairCode()">Get pair code</button>
+      <div class="code" id="codeBox" onclick="copyCode()"></div>
+      <ol class="steps">
+        <li><b>1</b><span>Digits only. No plus sign, no spaces.</span></li>
+        <li><b>2</b><span>WhatsApp, Settings, Linked Devices, Link a Device.</span></li>
+        <li><b>3</b><span>Choose "Link with phone number instead" and type the code.</span></li>
+      </ol>
+    </div>
+
+    <div class="status"><span class="dot" id="statusDot"></span><span id="statusText">Checking status</span></div>
+    <button class="btn ghost" id="anotherBtn" style="display:none;margin-top:14px" onclick="pairAnother()">Pair another number</button>
+    <div id="myBots" style="margin-top:12px;font:400 12px/1.8 var(--mono);color:var(--mute)"></div>
+  </section>
+
+  <div class="stats reveal d3">
+    <div class="stat"><b>270+</b><span>Commands</span></div>
+    <div class="stat"><b id="statBots">0</b><span>Bots online</span></div>
+    <div class="stat"><b>24/7</b><span>Uptime</span></div>
+  </div>
+  <p class="foot reveal d4">Crafted by <b>Nimah Dev</b></p>
+</main>
+
+<script>
+/* ---- tiny synthesized chimes (no audio files) ---- */
+let audioCtx = null;
+const getCtx = () => (audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)());
+function tone(f, d, delay, type, g) {
+  try {
+    const c = getCtx(); if (c.state === 'suspended') c.resume();
+    setTimeout(() => {
+      const o = c.createOscillator(), gn = c.createGain();
+      o.type = type || 'sine'; o.frequency.value = f;
+      gn.gain.setValueAtTime(g || .06, c.currentTime);
+      gn.gain.exponentialRampToValueAtTime(.0001, c.currentTime + d / 1000);
+      o.connect(gn).connect(c.destination); o.start(); o.stop(c.currentTime + d / 1000);
+    }, delay || 0);
+  } catch (e) {}
+}
+const playWelcome = () => { tone(440, 120, 0, 'triangle', .05); tone(659, 140, 110, 'triangle', .05); tone(880, 200, 240, 'triangle', .06); };
+const playQrReady = () => tone(587, 90, 0, 'sine', .05);
+const playConnected = () => { tone(523, 110, 0, 'triangle', .07); tone(659, 110, 100, 'triangle', .07); tone(784, 140, 200, 'triangle', .08); tone(1046, 240, 340, 'triangle', .08); };
+let unlocked = false;
+function unlock() { if (unlocked) return; unlocked = true; playWelcome(); ['click', 'touchstart', 'keydown'].forEach(e => document.removeEventListener(e, unlock)); }
+['click', 'touchstart', 'keydown'].forEach(e => document.addEventListener(e, unlock));
+
+/* ---- session ---- */
+let sessionId = null;
+const myList = () => { try { return JSON.parse(localStorage.getItem('nimah_sessions') || '[]'); } catch (e) { return []; } };
+function rememberSession(id) { const l = myList().filter((x) => x !== id); l.push(id); localStorage.setItem('nimah_sessions', JSON.stringify(l.slice(-30))); }
+async function ensureSession(forceNew) {
+  const stored = forceNew || new URLSearchParams(location.search).has('new') ? null : localStorage.getItem('nimah_session_id');
+  if (stored) {
+    try { const r = await fetch('/health?session=' + encodeURIComponent(stored)); const d = await r.json(); if (d.exists) { sessionId = stored; return sessionId; } } catch (e) {}
+  }
+  const r = await fetch('/api/new-session', { method: 'POST' });
+  const d = await r.json().catch(() => ({}));
+  if (!d.sessionId) { document.getElementById('statusText').innerText = d.error || 'Could not start a new session.'; document.getElementById('statusDot').className = 'dot off'; return null; }
+  sessionId = d.sessionId; localStorage.setItem('nimah_session_id', sessionId); rememberSession(sessionId);
+  return sessionId;
+}
+async function pairAnother() {
+  clearInterval(statusTimer); clearInterval(qrTimer); chimed = false; qrChimed = false;
+  document.getElementById('anotherBtn').style.display = 'none';
+  document.getElementById('codeBox').style.display = 'none'; document.getElementById('numInput').value = '';
+  const img = document.getElementById('qrImg'); img.style.display = 'none'; img.removeAttribute('src');
+  const w = document.getElementById('qrLoading'); w.style.display = 'flex'; w.innerText = 'Preparing your code';
+  document.querySelector('.scan').style.display = '';
+  document.getElementById('statusText').innerText = 'Starting a new session'; document.getElementById('statusDot').className = 'dot off';
+  if (await ensureSession(true)) startQr();
+}
+async function showMyBots() {
+  const ids = myList(), box = document.getElementById('myBots'); if (!ids.length) { box.innerHTML = ''; return; }
+  const rows = [];
+  for (const id of ids.slice().reverse()) {
+    try { const d = await (await fetch('/health?session=' + encodeURIComponent(id))).json(); if (d.exists && d.number) rows.push((d.connected ? '🟢 ' : '🔴 ') + d.number); } catch (e) {}
+  }
+  box.innerHTML = rows.length ? 'Your linked numbers<br>' + rows.join('<br>') : '';
+}
+
+/* ---- status ---- */
+let chimed = false, statusTimer = null;
+async function checkStatus() {
+  const dot = document.getElementById('statusDot'), text = document.getElementById('statusText');
+  try {
+    const r = await fetch('/health?session=' + encodeURIComponent(sessionId));
+    const d = await r.json();
+    if (d.connected) {
+      dot.className = 'dot on'; text.innerText = 'Bot connected';
+      document.getElementById('anotherBtn').style.display = 'block'; showMyBots();
+      if (!chimed) { chimed = true; playConnected(); }
+      clearInterval(statusTimer); statusTimer = setInterval(checkStatus, 8000);
+    } else { dot.className = 'dot off'; text.innerText = 'Waiting for connection'; }
+  } catch (e) { text.innerText = 'Status unavailable'; }
+}
+function pollStatus(fast) { checkStatus(); clearInterval(statusTimer); statusTimer = setInterval(checkStatus, fast ? 3000 : 8000); }
+async function refreshStats() {
+  try { const r = await fetch('/api/stats'); const d = await r.json(); document.getElementById('statBots').innerText = d.active; } catch (e) {}
+}
+
+/* ---- QR ---- */
+let qrTimer = null, qrChimed = false;
+function refreshQR() {
+  const img = document.getElementById('qrImg'), wait = document.getElementById('qrLoading'), hint = document.getElementById('qrHint');
+  const probe = new Image();
+  probe.onload = () => {
+    img.src = probe.src; img.style.display = 'block'; wait.style.display = 'none';
+    document.querySelector('.scan').style.display = 'none';
+    hint.innerText = 'refreshes automatically';
+    if (!qrChimed) { qrChimed = true; playQrReady(); }
+  };
+  probe.onerror = async () => {
+    try {
+      const r = await fetch('/qr?session=' + encodeURIComponent(sessionId));
+      const d = await r.json().catch(() => null);
+      if (d && d.error === 'Bot is already connected!') {
+        hint.innerText = 'already connected'; img.style.display = 'none'; wait.style.display = 'flex'; wait.innerText = 'Linked';
+        clearInterval(qrTimer); qrTimer = null; return;
+      }
+    } catch (e) {}
+    wait.innerText = 'Waiting for code';
+  };
+  probe.src = '/qr?session=' + encodeURIComponent(sessionId) + '&t=' + Date.now();
+}
+function startQr() { refreshQR(); clearInterval(qrTimer); qrTimer = setInterval(refreshQR, 5000); pollStatus(true); }
+
+/* ---- tabs + pair code ---- */
+function switchTab(t) {
+  document.getElementById('viewQr').classList.toggle('active', t === 'qr');
+  document.getElementById('viewCode').classList.toggle('active', t === 'code');
+  document.getElementById('tabQr').classList.toggle('active', t === 'qr');
+  document.getElementById('tabCode').classList.toggle('active', t === 'code');
+}
+function showCode(text, isErr) {
+  const box = document.getElementById('codeBox');
+  box.style.display = 'block'; box.classList.toggle('small', !!isErr); box.innerText = text;
+}
+async function getPairCode() {
+  const btn = document.getElementById('codeBtn');
+  const number = document.getElementById('numInput').value.replace(/\D/g, '');
+  if (number.length < 8) return showCode('Enter a valid number with country code.', true);
+  btn.disabled = true; btn.innerText = 'Generating';
+  document.getElementById('codeBox').style.display = 'none';
+  try {
+    const r = await fetch('/api/pair-code', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ session: sessionId, number }) });
+    const d = await r.json();
+    if (d.code) { showCode(d.code, false); playQrReady(); } else showCode(d.error || 'Failed. Try again.', true);
+  } catch (e) { showCode('Network error. Try again.', true); }
+  btn.disabled = false; btn.innerText = 'Get pair code';
+}
+function copyCode() { try { navigator.clipboard.writeText(document.getElementById('codeBox').innerText.replace(/-/g, '')); } catch (e) {} }
+
+(async function init() { if (await ensureSession()) startQr(); refreshStats(); setInterval(refreshStats, 5000); showMyBots(); })();
+
+/* ---- drifting dust ---- */
+(function () {
+  const w = document.getElementById('dust'), n = innerWidth < 500 ? 14 : 24;
+  for (let i = 0; i < n; i++) {
+    const e = document.createElement('i'), du = 9 + Math.random() * 10;
+    e.style.left = Math.random() * 100 + 'vw'; e.style.animationDuration = du + 's'; e.style.animationDelay = (-Math.random() * du) + 's';
+    e.style.transform = 'scale(' + (1 + Math.random() * 1.6) + ')'; w.appendChild(e);
+  }
+})();
+</script>
+</body>
+</html>
