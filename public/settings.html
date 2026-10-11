@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<!-- NIMAH MD — © 2026 Nimah Dev. All Rights Reserved. -->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f1eee8">
+<title>NIMAH MD — My bot</title>
+<link rel="icon" href="/logo.jpg">
+<link rel="stylesheet" href="/nimah.css">
+<link rel="stylesheet" href="/theme.css">
+<style>
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
+.chip2{font:500 11px var(--mono);letter-spacing:.04em;border:1.5px solid var(--ink);padding:3px 9px;background:var(--paper)}
+.chip2.hot{background:var(--ink);color:var(--paper)}
+.presets{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}
+.pre{border:2px solid var(--ink);background:var(--paper);padding:10px 6px;text-align:center;cursor:pointer;box-shadow:4px 4px 0 var(--red);transition:transform .15s,box-shadow .15s;font:inherit;color:inherit}
+.pre:active{transform:translate(3px,3px);box-shadow:1px 1px 0 var(--red)}
+.pre b{display:block;font-size:13px}.pre span{display:block;font-size:11px;color:var(--mute);margin-top:2px}
+.grp{margin-top:22px}
+.grp>.gt{font:500 11px var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--redd);border-bottom:1.5px solid var(--line);padding-bottom:6px;margin-bottom:6px}
+.seg{display:grid;gap:6px;margin:8px 0 4px}
+.seg button{font:inherit;text-align:left;border:1.5px solid var(--ink);background:var(--paper);padding:9px 12px;cursor:pointer;color:inherit;display:flex;gap:10px;align-items:center}
+.seg button.on{background:var(--ink);color:var(--paper)}
+.seg button small{display:block;font-size:11px;opacity:.7}
+.seg button i{font-style:normal;font-size:18px}
+.fld{margin:12px 0 4px}.fld .lab{font-weight:700;font-size:13px}.fld .ds{font-size:12px;color:var(--mute);margin-bottom:6px}
+.fld .row{display:flex;gap:8px}.fld .row .in{flex:1}
+.toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);background:var(--ink);color:var(--paper);padding:10px 16px;font:500 12px var(--mono);z-index:50;opacity:0;pointer-events:none;transition:opacity .2s}
+.toast.show{opacity:1}.toast.bad{background:var(--red)}
+.rule-card{border:1.5px solid var(--ink);background:var(--paper);padding:10px;margin:10px 0;position:relative}
+.rule-card .r2{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
+.rule-card textarea.in{min-height:64px;resize:vertical;margin-top:8px;font-family:inherit}
+.rule-card select.in{padding:8px}
+.rule-card .x{position:absolute;top:6px;right:8px;border:0;background:none;font:700 16px var(--mono);cursor:pointer;color:var(--red)}
+.mini{font-size:11px;color:var(--mute);margin-top:4px}
+</style>
+</head>
+<body>
+<div class="bg"></div><div class="grain"></div><div class="dust" id="dust"></div>
+
+<main class="shell">
+  <header class="mast reveal">
+    <div class="plate"><img src="/logo.jpg" alt="NIMAH MD"></div>
+    <h1 class="display">Your bot,<br><em>your rules.<svg viewBox="0 0 200 10" preserveAspectRatio="none"><path d="M2 6 C 30 1, 55 9, 90 4 S 160 8, 198 3"/></svg></em></h1>
+  </header>
+
+  <section class="sheet reveal d1" id="loginBox">
+    <i class="cm-a"></i><i class="cm-b"></i>
+    <div class="kicker">Sign in</div>
+    <p class="lede" style="margin-top:8px">Use the number and password the bot sent to your own WhatsApp chat when it connected.</p>
+    <label class="f" for="phoneInput">WhatsApp number</label>
+    <input class="in" id="phoneInput" type="tel" inputmode="numeric" placeholder="947XXXXXXXX" autocomplete="username">
+    <label class="f" for="pwInput">Password</label>
+    <input class="in" id="pwInput" type="password" placeholder="8 characters" autocomplete="current-password">
+    <button class="btn" onclick="doLogin()">Open my settings</button>
+    <div class="msg err" id="err"></div>
+    <p class="hint" style="text-align:left">This page only ever shows your own bot.</p>
+  </section>
+
+  <section class="sheet reveal d1" id="panel" style="display:none">
+    <i class="cm-a"></i><i class="cm-b"></i>
+    <div class="kicker">Control room</div>
+    <div class="sheet-title">Hello, <em id="whoName">friend</em></div>
+    <div class="status" style="margin-top:6px"><span class="dot" id="statusDot"></span><span id="statusText">Checking</span></div>
+    <div class="chips" id="chips"></div>
+
+    <hr class="rule">
+    <div class="kicker">Quick presets</div>
+    <div class="presets" id="presets"></div>
+
+    <div id="groups"></div>
+    <div id="extras"></div>
+
+    <div class="msg" id="saveMsg"></div>
+    <hr class="rule">
+    <button class="btn ghost sm" style="margin:0 8px 0 0" onclick="doPreset('reset')">Reset to defaults</button>
+    <button class="btn ghost sm" style="margin:0" onclick="logout()">Sign out</button>
+  </section>
+
+  <p class="foot reveal d3">Crafted by <b>Nimah Dev</b></p>
+</main>
+
+<script>
+let creds = JSON.parse(localStorage.getItem('nimah_user_creds') || 'null');
+let me = null, poll = null;
+const $ = (id) => document.getElementById(id);
+const authFetch = (url, opts) => { opts = opts || {}; opts.headers = Object.assign({ 'x-user-phone': creds.phone, 'x-user-password': creds.password, 'Content-Type': 'application/json' }, opts.headers || {}); return fetch(url, opts); };
+
+async function doLogin() {
+  const phone = $('phoneInput').value.trim(), password = $('pwInput').value.trim(), err = $('err');
+  err.innerText = '';
+  if (location.protocol !== 'http:' && location.protocol !== 'https:') { err.innerText = 'Open this page from its real web link, not a downloaded file.'; return; }
+  try {
+    const r = await fetch('/api/user/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ phone, password }) });
+    const d = await r.json();
+    if (!r.ok) { err.innerText = d.error || 'Login failed.'; return; }
+    creds = { phone, password }; localStorage.setItem('nimah_user_creds', JSON.stringify(creds)); showPanel();
+  } catch (e) { err.innerText = 'Server connection error.'; }
+}
+let cfg = null;
+const esc = (t) => String(t == null ? '' : t).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+function toast(t, bad) { const e = $('toast') || Object.assign(document.body.appendChild(document.createElement('div')), { id: 'toast', className: 'toast' }); e.textContent = t; e.className = 'toast show' + (bad ? ' bad' : ''); clearTimeout(e._t); e._t = setTimeout(() => { e.className = 'toast'; }, 2200); }
+function val(key) { for (const g of cfg.groups) for (const it of g.items) if (it.key === key) return it.value; }
+async function loadMe() {
+  const r = await authFetch('/api/user/settings');
+  if (r.status === 401) return logout();
+  cfg = await r.json(); render();
+}
+function render() {
+  $('statusDot').className = 'dot ' + (cfg.connected ? 'on' : 'off');
+  $('statusText').innerText = cfg.connected ? 'Bot connected' : 'Bot offline';
+  $('whoName').innerText = cfg.label || creds.phone;
+  const chip = (t, hot) => '<span class="chip2' + (hot ? ' hot' : '') + '">' + esc(t) + '</span>';
+  $('chips').innerHTML = chip('mode: ' + val('mode'), val('mode') !== 'public') + chip('read: ' + val('read'), val('read') !== 'off') + chip(val('online') ? 'always online' : 'normal online', val('online')) + chip(val('call') ? 'calls blocked' : 'calls allowed', val('call')) + chip(val('ai') ? 'AI chat on' : 'AI chat off', !val('ai'));
+  $('presets').innerHTML = cfg.presets.map((p) => '<button class="pre" onclick="doPreset(\'' + p.id + '\')"><b>' + p.icon + ' ' + esc(p.label) + '</b><span>' + esc(p.desc) + '</span></button>').join('');
+  const focused = document.activeElement && document.activeElement.dataset && document.activeElement.dataset.key;
+  $('groups').innerHTML = cfg.groups.map((g) => '<div class="grp"><div class="gt">' + g.icon + ' ' + esc(g.title.toLowerCase()) + '</div>' + g.items.map(item).join('') + '</div>').join('');
+  if (focused) { const e = document.querySelector('[data-key="' + focused + '"]'); if (e) e.focus(); }
+  renderExtras();
+}
+function item(it) {
+  if (it.type === 'bool') return '<div class="switch' + (it.value ? ' on' : '') + '" onclick="setVal(\'' + it.key + '\',' + (!it.value) + ')"><div class="t"><b>' + it.icons[it.value ? 0 : 1] + ' ' + esc(it.label) + '</b><span>' + esc(it.value ? it.onDesc : it.offDesc) + '</span></div><i class="sw"></i></div>';
+  if (it.type === 'choice') return '<div class="fld"><div class="lab">' + esc(it.label) + '</div><div class="seg">' + it.options.map((o) => '<button class="' + (o.value === it.value ? 'on' : '') + '" onclick="setVal(\'' + it.key + '\',\'' + o.value + '\')"><i>' + o.icon + '</i><span>' + esc(o.label) + '<small>' + esc(o.desc) + '</small></span></button>').join('') + '</div></div>';
+  return '<div class="fld"><div class="lab">' + it.icon + ' ' + esc(it.label) + '</div><div class="ds">' + esc(it.desc) + '</div><div class="row"><input class="in" data-key="' + it.key + '" id="t_' + it.key + '" type="' + (it.secret ? 'password' : 'text') + '" placeholder="' + esc(it.secret ? 'new password' : it.hint) + '" value="' + esc(it.value) + '" autocomplete="off"><button class="btn ghost sm" style="margin:0" onclick="saveText(\'' + it.key + '\')">Save</button></div></div>';
+}
+
+let rules = [];
+function renderExtras() {
+  rules = JSON.parse(JSON.stringify(cfg.autoReplies || []));
+  const cats = cfg.categories || [];
+  $('extras').innerHTML =
+    '<div class="grp"><div class="gt">💭 auto replies</div><div class="ds mini" style="margin-bottom:6px">When someone writes your trigger word, the bot answers with your text. You can use {name}, {time} and {date} inside the reply. Up to 20 rules.</div><div id="ruleList"></div>' +
+    '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px"><button class="btn ghost sm" style="margin:0" onclick="addRule()">+ Add rule</button><button class="btn sm" style="margin:0" onclick="saveRules()">Save rules</button></div></div>' +
+    '<div class="grp"><div class="gt">🧱 command groups</div><div class="ds mini" style="margin-bottom:6px">Switch a whole group of commands off for other people. You always keep access.</div>' +
+    cats.map((c) => '<div class="switch' + (c.on ? ' on' : '') + '" onclick="toggleCat(\'' + esc(c.name) + '\')"><div class="t"><b>' + esc(c.name) + '</b><span>' + c.count + ' commands</span></div><i class="sw"></i></div>').join('') + '</div>';
+  drawRules();
+}
+function drawRules() {
+  $('ruleList').innerHTML = rules.length ? rules.map((r, i) =>
+    '<div class="rule-card"><button class="x" title="Remove" onclick="delRule(' + i + ')">×</button>' +
+    '<input class="in" placeholder="When someone writes…" maxlength="60" value="' + esc(r.trigger) + '" oninput="rules[' + i + '].trigger=this.value">' +
+    '<textarea class="in" placeholder="…the bot replies" maxlength="500" oninput="rules[' + i + '].reply=this.value">' + esc(r.reply) + '</textarea>' +
+    '<div class="r2"><select class="in" onchange="rules[' + i + '].match=this.value">' + [['contains', 'contains the word'], ['exact', 'is exactly'], ['starts', 'starts with']].map((o) => '<option value="' + o[0] + '"' + (r.match === o[0] ? ' selected' : '') + '>' + o[1] + '</option>').join('') + '</select>' +
+    '<select class="in" onchange="rules[' + i + '].scope=this.value">' + [['all', 'chats + groups'], ['dm', 'chats only'], ['group', 'groups only']].map((o) => '<option value="' + o[0] + '"' + (r.scope === o[0] ? ' selected' : '') + '>' + o[1] + '</option>').join('') + '</select></div>' +
+    '<label class="mini" style="display:block;margin-top:8px"><input type="checkbox" ' + (r.on === false ? '' : 'checked') + ' onchange="rules[' + i + '].on=this.checked"> rule is on</label></div>').join('') : '<div class="mini">No rules yet.</div>';
+}
+function addRule() { if (rules.length >= 20) return toast('Up to 20 rules.', true); rules.push({ trigger: '', reply: '', match: 'contains', scope: 'all', on: true }); drawRules(); }
+function delRule(i) { rules.splice(i, 1); drawRules(); }
+async function saveRules() {
+  const r = await authFetch('/api/user/autoreplies', { method: 'POST', body: JSON.stringify({ rules }) });
+  const d = await r.json(); if (!r.ok) return toast(d.error || 'Could not save.', true);
+  cfg = d.settings; renderExtras(); toast('Rules saved');
+}
+async function toggleCat(name) {
+  const off = (cfg.categories || []).filter((c) => (c.name === name ? c.on : !c.on)).map((c) => c.name);
+  const r = await authFetch('/api/user/categories', { method: 'POST', body: JSON.stringify({ off }) });
+  const d = await r.json(); if (!r.ok) return toast(d.error || 'Could not save.', true);
+  cfg = d.settings; renderExtras(); toast('Saved');
+}
+async function setVal(key, value) {
+  const r = await authFetch('/api/user/settings', { method: 'POST', body: JSON.stringify({ key, value }) });
+  const d = await r.json();
+  if (!r.ok) return toast(d.error || 'Could not save.', true);
+  cfg = d.settings; render(); toast('Saved');
+}
+async function saveText(key) {
+  const v = $('t_' + key).value.trim();
+  const r = await authFetch('/api/user/settings', { method: 'POST', body: JSON.stringify({ key, value: v }) });
+  const d = await r.json();
+  if (!r.ok) return toast(d.error || 'Could not save.', true);
+  if (d.passwordChanged) { creds.password = v; localStorage.setItem('nimah_user_creds', JSON.stringify(creds)); $('t_' + key).value = ''; }
+  cfg = d.settings; render(); toast(d.passwordChanged ? 'Password changed' : 'Saved');
+}
+async function doPreset(id) {
+  if (id === 'reset' && !confirm('Put every switch back to its default? Your name and password stay.')) return;
+  const r = await authFetch('/api/user/preset', { method: 'POST', body: JSON.stringify({ id }) });
+  const d = await r.json();
+  if (!r.ok) return toast(d.error || 'Could not apply.', true);
+  cfg = d.settings; render(); toast(id === 'reset' ? 'Settings reset' : 'Preset applied');
+}
+function showPanel() { $('loginBox').style.display = 'none'; $('panel').style.display = 'block'; loadMe(); clearInterval(poll); poll = setInterval(() => { if (!(document.activeElement && /^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement.tagName))) loadMe(); }, 12000); }
+function logout() { localStorage.removeItem('nimah_user_creds'); location.reload(); }
+$('pwInput').addEventListener('keydown', (e) => { if (e.key === 'Enter') doLogin(); });
+(function () { const q = new URLSearchParams(location.search).get('phone'); if (q && $('phoneInput')) $('phoneInput').value = q.replace(/\D/g, ''); else if (creds && $('phoneInput')) $('phoneInput').value = creds.phone || ''; })();
+if (creds) showPanel();
+
+(function () {
+  const w = $('dust'), n = innerWidth < 500 ? 12 : 20;
+  for (let i = 0; i < n; i++) { const e = document.createElement('i'), du = 9 + Math.random() * 10; e.style.left = Math.random() * 100 + 'vw'; e.style.animationDuration = du + 's'; e.style.animationDelay = (-Math.random() * du) + 's'; w.appendChild(e); }
+})();
+</script>
+</body>
+</html>
