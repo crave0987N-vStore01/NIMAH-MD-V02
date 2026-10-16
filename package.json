@@ -1,0 +1,29 @@
+{
+  "name": "nimah-md-bot",
+  "version": "7.33.0",
+  "description": "NIMAH MD \u2014 Private WhatsApp Bot by Nimah Dev",
+  "author": "Nimah Dev",
+  "license": "UNLICENSED",
+  "private": true,
+  "main": "index.js",
+  "scripts": {
+    "start": "UV_THREADPOOL_SIZE=16 node --expose-gc index.js"
+  },
+  "dependencies": {
+    "@napi-rs/canvas": "^0.1.65",
+    "axios": "^1.6.0",
+    "express": "^4.19.2",
+    "pdf-lib": "^1.17.1",
+    "pdfjs-dist": "^4.10.38",
+    "pino": "^9.6.0",
+    "qrcode": "^1.5.3",
+    "@whiskeysockets/baileys": "6.7.24"
+  },
+  "engines": {
+    "node": ">=20.19.0"
+  },
+  "optionalDependencies": {
+    "ffmpeg-static": "^5.2.0",
+    "sharp": "^0.33.5"
+  }
+}
